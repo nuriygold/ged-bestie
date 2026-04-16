@@ -98,6 +98,18 @@ a { color: var(--primary-dark); }
   border-top: 1px solid var(--border);
   background: var(--surface);
 }
+.footer small {
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.footer small.tagline-in {
+  animation: taglineIn 280ms ease;
+}
+@keyframes taglineIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* ---------- Cards & sections ---------- */
 .card {
@@ -340,6 +352,71 @@ select:focus, input:focus {
 .feedback.bad { background: #fbebeb; border-color: #ebbdbd; }
 .feedback h4 { margin: 0 0 6px; }
 .feedback .xp-gain { display: inline-block; margin-left: 6px; background: var(--gold); color: #5a3d00; padding: 2px 8px; border-radius: 99px; font-size: 0.82rem; font-weight: 800; }
+
+.walkthrough {
+  margin-top: 12px;
+  border: 1px dashed rgba(20, 28, 46, 0.2);
+  border-radius: 12px;
+  background: #fffdf8;
+  padding: 10px 12px;
+}
+.walkthrough .walk-title {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #45506b;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.walkthrough .walk-board {
+  position: relative;
+  background: repeating-linear-gradient(
+    to bottom,
+    #fefcf6 0,
+    #fefcf6 25px,
+    #e8e2d5 26px
+  );
+  border-radius: 8px;
+  padding: 12px 10px 8px 10px;
+}
+.walkthrough .pencil {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 1rem;
+  opacity: 0.72;
+}
+.walkthrough .hand-line {
+  margin: 0 0 7px 0;
+  min-height: 1.2em;
+  font-size: 0.93rem;
+  color: #1e2740;
+}
+.walkthrough .hand-line span {
+  display: inline-block;
+}
+
+.handwriting .hand-line span {
+  width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid #4f5a79;
+  animation: pencilWrite 900ms steps(34, end) forwards;
+  animation-delay: calc(var(--i) * 860ms);
+}
+
+@keyframes pencilWrite {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handwriting .hand-line span {
+    width: auto;
+    border-right: 0;
+    animation: none;
+  }
+}
 
 /* ---------- Results ---------- */
 .score-big {

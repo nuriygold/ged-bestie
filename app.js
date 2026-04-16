@@ -8,6 +8,54 @@ import {
   scoreQuiz
 } from "./logic.js";
 
+const FOOTER_TAGLINES = [
+  "Locked in today. Levels up tomorrow.",
+  "You got main character study energy.",
+  "That focus is elite. Keep cooking.",
+  "Calm brain, sharp moves, big score.",
+  "You are building real test-day confidence.",
+  "Discipline looks good on you, bro.",
+  "One more rep. One more win.",
+  "GED-BFF says: you are colder than the clock."
+];
+
+const ACRONYM_BY_CATEGORY = {
+  "basic arithmetic": {
+    label: "PEMDAS",
+    meaning: "Parentheses, Exponents, Multiply/Divide, Add/Subtract"
+  },
+  "fractions/decimals/percents": {
+    label: "KCF",
+    meaning: "Keep, Change, Flip for fraction division"
+  },
+  "ratios and proportions": {
+    label: "X-MULTIPLY",
+    meaning: "Cross-multiply to solve proportions"
+  },
+  "algebra basics": {
+    label: "ISOLATE",
+    meaning: "Inverse operations to get the variable alone"
+  },
+  "expressions and equations": {
+    label: "DISTRIBUTE",
+    meaning: "Distribute, combine like terms, then solve"
+  },
+  geometry: {
+    label: "DRAW",
+    meaning: "Draw the shape, label values, write the formula"
+  },
+  "word problems": {
+    label: "RUPS",
+    meaning: "Read, Underline, Plan, Solve"
+  },
+  "data/graphs": {
+    label: "CATS",
+    meaning: "Check Chart, Axes, Trend, Summary"
+  }
+};
+
+let footerRotationHandle = null;
+
 // ---------------- State ----------------
 const state = {
   questions: [],        // full loaded bank
@@ -359,12 +407,21 @@ function showFeedback(q, userAns) {
   const correctText = q.inputType === "numeric"
     ? q.correctAnswer
     : `${choiceLetter(q.correctAnswer)}) ${q.choices[q.correctAnswer]}`;
+  const walkthroughHtml = correct
+    ? ""
+    : renderWalkthroughGraphic({
+        question: q,
+        userAnswer: userAns,
+        correctText,
+        animated: true
+      });
 
   slot.innerHTML = `
     <div class="feedback ${correct ? "ok" : "bad"}">
       <h4>${correct ? "✅ Correct!" : "❌ Not quite."}</h4>
       ${correct ? "" : `<div><strong>Correct answer:</strong> ${escapeHtml(String(correctText))}</div>`}
       <div class="expl" style="margin-top:6px">${escapeHtml(q.explanation || "")}</div>
+      ${walkthroughHtml}
     </div>
   `;
 }
@@ -395,6 +452,12 @@ function renderResults() {
             <div class="ans"><span class="lbl">Your answer:</span>${escapeHtml(userText)}</div>
             <div class="ans"><span class="lbl">Correct:</span>${escapeHtml(String(correctText))}</div>
             <div class="expl">${escapeHtml(q.explanation || "")}</div>
+            ${renderWalkthroughGraphic({
+              question: q,
+              userAnswer,
+              correctText,
+              animated: false
+            })}
           </div>`;
       }).join("");
 
@@ -442,6 +505,75 @@ function formatUserAnswer(q, userAns) {
   return `${choiceLetter(i)}) ${q.choices[i]}`;
 }
 
+function getAcronymHint(category) {
+  return ACRONYM_BY_CATEGORY[category] || {
+    label: "STEP-UP",
+    meaning: "Scan, Translate, Equation, Plug in"
+  };
+}
+
+function buildWalkthroughSteps({ question, userAnswer, correctText }) {
+  const hint = getAcronymHint(question.category);
+  const userText = formatUserAnswer(question, userAnswer);
+  const setupLine = question.inputType === "numeric"
+    ? "Write the equation from the words, then plug in the known numbers."
+    : "Eliminate weak choices first, then verify the last best choice."
+
+  return [
+    `Acronym check: ${hint.label} = ${hint.meaning}`,
+    `Set it up: ${setupLine}`,
+    `Student attempt: ${userText}`,
+    `Correct result: ${correctText}`,
+    "Coach note: slow down on setup, then re-check units/signs before final answer."
+  ];
+}
+
+function renderWalkthroughGraphic({ question, userAnswer, correctText, animated }) {
+  const steps = buildWalkthroughSteps({ question, userAnswer, correctText });
+  const cls = animated ? "walkthrough handwriting" : "walkthrough";
+
+  return `
+    <div class="${cls}" aria-label="Step-by-step walkthrough">
+      <div class="walk-title">✏ Pencil walkthrough</div>
+      <div class="walk-board">
+        <div class="pencil" aria-hidden="true">✏</div>
+        ${steps.map((step, i) => `
+          <p class="hand-line" style="--i:${i}"><span>${escapeHtml(step)}</span></p>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function initFooterTaglines() {
+  if (footerRotationHandle) return;
+  const footerLine = document.querySelector(".footer small");
+  if (!footerLine) return;
+
+  let idx = 0;
+  let paused = false;
+
+  const swap = () => {
+    if (paused) return;
+    idx = (idx + 1) % FOOTER_TAGLINES.length;
+    footerLine.classList.remove("tagline-in");
+    requestAnimationFrame(() => {
+      footerLine.textContent = FOOTER_TAGLINES[idx];
+      footerLine.classList.add("tagline-in");
+    });
+  };
+
+  footerLine.textContent = FOOTER_TAGLINES[0];
+  footerLine.classList.add("tagline-in");
+
+  footerLine.addEventListener("mouseenter", () => { paused = true; });
+  footerLine.addEventListener("mouseleave", () => { paused = false; });
+  footerLine.addEventListener("focusin", () => { paused = true; });
+  footerLine.addEventListener("focusout", () => { paused = false; });
+
+  footerRotationHandle = setInterval(swap, 4200);
+}
+
 // ---------------- Timer ----------------
 function startTimer() {
   clearTimer();
@@ -479,6 +611,7 @@ function escapeAttr(s) { return escapeHtml(s); }
   app.innerHTML = `<section class="card"><p class="muted">Loading question bank…</p></section>`;
   try {
     state.questions = await loadQuestions();
+    initFooterTaglines();
     renderHome();
   } catch (err) {
     app.innerHTML = `<section class="card"><h2>Could not load questions</h2>
