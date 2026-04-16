@@ -8,35 +8,7 @@ import {
   scoreQuiz
 } from "./logic.js";
 
-import {
-  applyAnswer,
-  xpToNextLevel,
-  levelTitle,
-  evaluateBadges,
-  finalizeSession,
-  createProfile,
-  readinessScore,
-  masteryTier
-} from "./profile.js";
-
-import { loadProfile, saveProfile } from "./storage.js";
-
 const FOOTER_TAGLINES = [
-  "Locked in today. Levels up tomorrow.",
-  "You got main character study energy.",
-  "That focus is elite. Keep cooking.",
-  "Calm brain, sharp moves, big score.",
-  "You are building real test-day confidence.",
-  "Discipline looks good on you, bro.",
-  "One more rep. One more win.",
-  "GED-BFF says: you are colder than the clock.",
-  "No cap, you are built different.",
-  "W grind. Stay dangerous.",
-  "Bro ate that question and left no crumbs.",
-  "That answer was sending — pure ice.",
-  "You are lowkey a math legend.",
-  "Zero doubts. Just reps.",
-  "Slay the test. Crown yourself."
   "Locked in, legend. Your future self is proud.",
   "You study like a starter, not a bench player.",
   "That brain work is varsity-level, my guy.",
@@ -122,7 +94,6 @@ const state = {
     count: 10,
     timeMinutes: 15
   },
-  profile: null         // loaded from localStorage via storage.js
   sessionStartedAt: Date.now(),
   breakShown: false
 };
@@ -135,19 +106,6 @@ document.querySelectorAll("[data-nav]").forEach(btn => {
 });
 document.querySelectorAll("[data-close]").forEach(btn => {
   btn.addEventListener("click", closeModal);
-});
-
-document.querySelectorAll("[data-tool]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const tool = btn.dataset.tool;
-    if (tool === "calc") openCalc();
-    else if (tool === "formulas") openFormulas();
-  });
-});
-
-// Close modal when backdrop or ✕ button is clicked (event delegation on root).
-document.getElementById("modal-root")?.addEventListener("click", e => {
-  if (e.target.closest("[data-close]")) closeModal();
 });
 
 function navigate(view) {
@@ -175,43 +133,7 @@ function renderHome() {
     n: state.questions.filter(q => q.category === c).length
   }));
 
-  const p = state.profile;
-  const lvlInfo = xpToNextLevel(p.xp || 0);
-  const lvl = lvlInfo.level;
-  const title = levelTitle(lvl);
-  const readiness = readinessScore(p);
-
-  const masteryRows = CATEGORIES.map(c => {
-    const data = p.byCategory?.[c] || { mastery: 0 };
-    const tier = masteryTier(data.mastery);
-    return `
-      <div class="mastery-row">
-        <span class="name">${escapeHtml(c)}</span>
-        <span class="pct" style="color:${tier.color}">${data.mastery}%</span>
-        <div class="bar"><span style="width:${data.mastery}%;background:${tier.color}"></span></div>
-      </div>`;
-  }).join("");
-
   app.innerHTML = `
-    <section class="card hero">
-      <h1>Welcome back, GED-BFF 👋</h1>
-      <div class="stat-row">
-        <div class="stat"><div class="num">Lvl ${lvl}</div><div class="lbl">${escapeHtml(title)}</div></div>
-        <div class="stat"><div class="num">${p.totalAnswered || 0}</div><div class="lbl">Answered</div></div>
-        <div class="stat"><div class="num">${p.dailyStreak || 0}</div><div class="lbl">Day streak 🔥</div></div>
-        <div class="stat"><div class="num">${readiness}%</div><div class="lbl">Readiness</div></div>
-      </div>
-      <div class="xp-wrap">
-        <div class="xp-head">
-          <span>XP <strong>${p.xp || 0}</strong></span>
-          <span>${lvlInfo.remainingXp} XP to level ${lvl + 1}</span>
-        </div>
-        <div class="xp-bar"><span style="width:${lvlInfo.percent}%"></span></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Choose a mode</h2>
     <section class="card hero home-hero">
       <p class="eyebrow">GED Math prep, leveled up</p>
       <h1>Welcome to GED-BFF 👋</h1>
@@ -239,11 +161,6 @@ function renderHome() {
         <button class="pill-btn" data-go="practice-setup">Warm up (10 Q)</button>
         <button class="pill-btn" data-go="test-setup">Timed set (15 min)</button>
       </div>
-    </section>
-
-    <section class="card">
-      <h2>Mastery by category</h2>
-      <div class="mastery-list">${masteryRows}</div>
     </section>
 
     <section class="card">
@@ -602,30 +519,6 @@ function showFeedback(q, userAns) {
       ${walkthroughHtml}
     </div>
   `;
-
-  // Update profile — XP, mastery, streaks, badges.
-  const prevLvl = xpToNextLevel(state.profile.xp || 0).level;
-  const { profile: p2, xpGained } = applyAnswer(state.profile, q, correct);
-  const newLvl = xpToNextLevel(p2.xp).level;
-  const { profile: p3, newlyEarned } = evaluateBadges(p2, { hourOfDay: new Date().getHours() });
-  state.profile = p3;
-  saveProfile(state.profile);
-
-  // XP toast
-  if (correct) {
-    showToast({ title: `+${xpGained} XP`, body: "Keep stacking wins, bro!", gold: true });
-  }
-
-  // Level-up toast
-  if (newLvl > prevLvl) {
-    showToast({ title: `🎉 Level ${newLvl} unlocked!`, body: `You are now a ${levelTitle(newLvl)}`, gold: true });
-    launchConfetti();
-  }
-
-  // Badge toasts
-  for (const badge of newlyEarned) {
-    showToast({ title: `${badge.icon} Badge: ${badge.name}`, body: badge.description });
-  }
 }
 
 // ---------------- Results ----------------
@@ -633,46 +526,6 @@ function renderResults() {
   clearTimer();
   const result = scoreQuiz(state.quiz, state.answers);
   const recommendation = buildScoreRecommendation(result);
-
-  // In test mode, apply unanswered questions to profile stats.
-  if (state.mode === "test") {
-    let p = state.profile;
-    state.quiz.forEach((q, i) => {
-      const ans = state.answers[i];
-      if (ans === null || ans === undefined || ans === "") return; // skipped
-      const correct = isCorrect(q, ans);
-      ({ profile: p } = applyAnswer(p, q, correct));
-    });
-    const { profile: p2, newlyEarned } = evaluateBadges(p, { hourOfDay: new Date().getHours() });
-    p = finalizeSession(p2, {
-      mode: state.mode,
-      total: result.total,
-      correct: result.correct,
-      percent: result.percent
-    });
-    state.profile = p;
-    saveProfile(state.profile);
-    for (const badge of newlyEarned) {
-      showToast({ title: `${badge.icon} Badge: ${badge.name}`, body: badge.description });
-    }
-  } else {
-    // Practice mode: finalize session streak / history.
-    const p = finalizeSession(state.profile, {
-      mode: state.mode,
-      total: result.total,
-      correct: result.correct,
-      percent: result.percent
-    });
-    state.profile = p;
-    saveProfile(state.profile);
-  }
-
-  if (result.percent === 100) {
-    launchConfetti();
-    showToast({ title: "💯 Perfect score! Insane.", body: "You are cold as ice fr.", gold: true });
-  } else if (result.percent >= 80) {
-    showToast({ title: `${result.percent}% — W session`, body: "GED-BFF is proud of you.", gold: true });
-  }
 
   const catRows = Object.entries(result.byCategory)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -807,189 +660,6 @@ function renderWalkthroughGraphic({ question, userAnswer, correctText, animated 
   `;
 }
 
-// ---------------- Modal ----------------
-function openModal(html) {
-  const root = document.getElementById("modal-root");
-  const content = document.getElementById("modal-content");
-  if (!root || !content) return;
-  content.innerHTML = html;
-  root.classList.remove("hidden");
-}
-
-function closeModal() {
-  document.getElementById("modal-root")?.classList.add("hidden");
-}
-
-// ---------------- Toast ----------------
-function showToast({ title, body = "", gold = false }) {
-  const stack = document.getElementById("toast-stack");
-  if (!stack) return;
-  const el = document.createElement("div");
-  el.className = "toast" + (gold ? " gold" : "");
-  el.innerHTML = `<div class="title">${escapeHtml(title)}</div>${body ? `<div class="body">${escapeHtml(body)}</div>` : ""}`;
-  stack.appendChild(el);
-  setTimeout(() => el.remove(), 3800);
-}
-
-// ---------------- Confetti ----------------
-function launchConfetti() {
-  const canvas = document.getElementById("confetti");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  const colors = ["#4a90e2", "#7b61ff", "#f4b324", "#2ea66b", "#ff77a9", "#ff6b35"];
-  const particles = Array.from({ length: 90 }, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height - canvas.height,
-    r: Math.random() * 6 + 3,
-    d: Math.random() * 120,
-    color: colors[Math.floor(Math.random() * colors.length)],
-    tiltAngle: 0,
-    tiltAngleInc: Math.random() * 0.07 + 0.05
-  }));
-
-  let frame = 0;
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      p.tiltAngle += p.tiltAngleInc;
-      p.y += (Math.cos(p.d) + 2 + p.r / 2) * 0.6;
-      const tilt = Math.sin(p.tiltAngle) * 12;
-      ctx.beginPath();
-      ctx.lineWidth = p.r;
-      ctx.strokeStyle = p.color;
-      ctx.moveTo(p.x + tilt + p.r / 3, p.y);
-      ctx.lineTo(p.x + tilt, p.y + tilt + p.r / 5);
-      ctx.stroke();
-    });
-    frame++;
-    if (frame < 200) {
-      requestAnimationFrame(draw);
-    } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-  }
-
-  requestAnimationFrame(draw);
-}
-
-// ---------------- Calculator ----------------
-const MAX_CALC_DIGITS = 15;
-
-function openCalc() {
-  openModal(`
-    <h2 style="margin:0 0 12px">🧮 Calculator</h2>
-    <div class="calc-display" id="calc-display">0</div>
-    <div class="calc-keys">
-      <button class="clr" data-calc="C">C</button>
-      <button class="op"  data-calc="±">±</button>
-      <button class="op"  data-calc="%">%</button>
-      <button class="op"  data-calc="/">÷</button>
-      <button data-calc="7">7</button>
-      <button data-calc="8">8</button>
-      <button data-calc="9">9</button>
-      <button class="op"  data-calc="*">×</button>
-      <button data-calc="4">4</button>
-      <button data-calc="5">5</button>
-      <button data-calc="6">6</button>
-      <button class="op"  data-calc="-">−</button>
-      <button data-calc="1">1</button>
-      <button data-calc="2">2</button>
-      <button data-calc="3">3</button>
-      <button class="op"  data-calc="+">+</button>
-      <button data-calc="0" style="grid-column:span 2">0</button>
-      <button data-calc=".">.</button>
-      <button class="eq"  data-calc="=">=</button>
-    </div>
-  `);
-
-  let cs = { display: "0", first: null, op: null, waiting: false };
-  const disp = document.getElementById("calc-display");
-
-  document.getElementById("modal-content").querySelectorAll("[data-calc]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      cs = handleCalcKey(cs, btn.dataset.calc);
-      disp.textContent = cs.display;
-    });
-  });
-}
-
-function handleCalcKey(s, key) {
-  if (key === "C") return { display: "0", first: null, op: null, waiting: false };
-  if (key === "±") return { ...s, display: String(parseFloat(s.display) * -1 || 0) };
-  if (key === "%") return { ...s, display: String(parseFloat(s.display) / 100) };
-
-  if (["+", "-", "*", "/"].includes(key)) {
-    return { display: s.display, first: parseFloat(s.display), op: key, waiting: true };
-  }
-
-  if (key === "=") {
-    if (s.op === null || s.first === null) return s;
-    const second = parseFloat(s.display);
-    let result;
-    switch (s.op) {
-      case "+": result = s.first + second; break;
-      case "-": result = s.first - second; break;
-      case "*": result = s.first * second; break;
-      case "/": result = second === 0 ? "Error" : s.first / second; break;
-      default: result = second;
-    }
-    const str = typeof result === "string" ? result : Number(result.toFixed(10)).toString();
-    return { display: str, first: null, op: null, waiting: false };
-  }
-
-  if (key === ".") {
-    if (s.waiting) return { ...s, display: "0.", waiting: false };
-    if (s.display.includes(".")) return s;
-    return { ...s, display: s.display + "." };
-  }
-
-  // digit key
-  if (s.waiting) return { ...s, display: key, waiting: false };
-  const next = s.display === "0" ? key : s.display + key;
-  return { ...s, display: next.slice(0, MAX_CALC_DIGITS) };
-}
-
-// ---------------- Formula Sheet ----------------
-function openFormulas() {
-  openModal(`
-    <h2 style="margin:0 0 12px">📐 Formula Sheet</h2>
-    <div class="formula-group">
-      <h3>Geometry</h3>
-      <ul class="formula-list">
-        <li><span class="name">Rectangle area</span>      <span class="formula">A = l × w</span></li>
-        <li><span class="name">Triangle area</span>       <span class="formula">A = ½bh</span></li>
-        <li><span class="name">Circle area</span>         <span class="formula">A = πr²</span></li>
-        <li><span class="name">Circumference</span>       <span class="formula">C = 2πr</span></li>
-        <li><span class="name">Pythagorean theorem</span> <span class="formula">a² + b² = c²</span></li>
-        <li><span class="name">Cube volume</span>         <span class="formula">V = s³</span></li>
-        <li><span class="name">Cylinder volume</span>     <span class="formula">V = πr²h</span></li>
-      </ul>
-    </div>
-    <div class="formula-group">
-      <h3>Algebra</h3>
-      <ul class="formula-list">
-        <li><span class="name">Slope</span>               <span class="formula">m = (y₂−y₁)/(x₂−x₁)</span></li>
-        <li><span class="name">Slope-intercept</span>     <span class="formula">y = mx + b</span></li>
-        <li><span class="name">Quadratic formula</span>   <span class="formula">x = (−b ± √(b²−4ac)) / 2a</span></li>
-        <li><span class="name">Distance formula</span>    <span class="formula">d = √((x₂−x₁)² + (y₂−y₁)²)</span></li>
-      </ul>
-    </div>
-    <div class="formula-group">
-      <h3>Data &amp; Stats</h3>
-      <ul class="formula-list">
-        <li><span class="name">Mean</span>                <span class="formula">sum ÷ count</span></li>
-        <li><span class="name">Simple interest</span>     <span class="formula">I = Prt</span></li>
-        <li><span class="name">Percent change</span>      <span class="formula">(new − old) / old × 100</span></li>
-      </ul>
-    </div>
-  `);
-}
-
-// ---------------- Footer taglines ----------------
 function buildScoreRecommendation(result) {
   const weakest = Object.entries(result.byCategory)
     .map(([category, data]) => ({ category, pct: Math.round((data.correct / data.total) * 100) }))
@@ -1154,12 +824,7 @@ function startTimer() {
   state.timer.handle = setInterval(() => {
     state.timer.remaining -= 1;
     const el = document.getElementById("timer");
-    if (el) {
-      el.textContent = formatTime(state.timer.remaining);
-      // Warn when ≤10% of original time remains.
-      const warnThreshold = Math.ceil(state.timer.total * 0.1);
-      if (state.timer.remaining <= warnThreshold) el.classList.add("warn");
-    }
+    if (el) el.textContent = formatTime(state.timer.remaining);
     if (state.timer.remaining <= 0) {
       clearTimer();
       alert("Time's up! Submitting your answers.");
@@ -1194,7 +859,6 @@ function escapeAttr(s) { return escapeHtml(s); }
   app.innerHTML = `<section class="card"><p class="muted">Loading question bank…</p></section>`;
   try {
     state.questions = await loadQuestions();
-    state.profile = loadProfile() || createProfile({ name: "Friend" });
     initFooterTaglines();
     renderHome();
   } catch (err) {
