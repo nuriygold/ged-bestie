@@ -1,0 +1,55 @@
+[
+  {
+    "group": "Area",
+    "items": [
+      { "name": "Rectangle", "formula": "A = l × w" },
+      { "name": "Square", "formula": "A = s²" },
+      { "name": "Triangle", "formula": "A = ½ × b × h" },
+      { "name": "Parallelogram", "formula": "A = b × h" },
+      { "name": "Trapezoid", "formula": "A = ½ × (b₁ + b₂) × h" },
+      { "name": "Circle", "formula": "A = π × r²" }
+    ]
+  },
+  {
+    "group": "Perimeter / Circumference",
+    "items": [
+      { "name": "Rectangle", "formula": "P = 2l + 2w" },
+      { "name": "Square", "formula": "P = 4s" },
+      { "name": "Triangle", "formula": "P = a + b + c" },
+      { "name": "Circle", "formula": "C = 2πr  or  C = πd" }
+    ]
+  },
+  {
+    "group": "Surface Area & Volume",
+    "items": [
+      { "name": "Rectangular prism (V)", "formula": "V = l × w × h" },
+      { "name": "Cube (V)", "formula": "V = s³" },
+      { "name": "Cylinder (V)", "formula": "V = π × r² × h" },
+      { "name": "Cone (V)", "formula": "V = ⅓ × π × r² × h" },
+      { "name": "Sphere (V)", "formula": "V = 4/3 × π × r³" },
+      { "name": "Pyramid (V)", "formula": "V = ⅓ × base area × h" }
+    ]
+  },
+  {
+    "group": "Algebra",
+    "items": [
+      { "name": "Slope", "formula": "m = (y₂ − y₁) / (x₂ − x₁)" },
+      { "name": "Slope-intercept form", "formula": "y = mx + b" },
+      { "name": "Point-slope form", "formula": "y − y₁ = m(x − x₁)" },
+      { "name": "Standard form", "formula": "Ax + By = C" },
+      { "name": "Distance", "formula": "d = √((x₂−x₁)² + (y₂−y₁)²)" },
+      { "name": "Midpoint", "formula": "((x₁+x₂)/2, (y₁+y₂)/2)" },
+      { "name": "Quadratic formula", "formula": "x = (−b ± √(b² − 4ac)) / (2a)" },
+      { "name": "Pythagorean theorem", "formula": "a² + b² = c²" }
+    ]
+  },
+  {
+    "group": "Data",
+    "items": [
+      { "name": "Mean", "formula": "sum ÷ count" },
+      { "name": "Median", "formula": "middle value of ordered set" },
+      { "name": "Probability", "formula": "favorable ÷ total" },
+      { "name": "Simple interest", "formula": "I = P × r × t" }
+    ]
+  }
+]

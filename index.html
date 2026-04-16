@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#4a90e2" />
+  <title>Ged-Bestie · GED Math Practice</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <button class="brand" data-nav="home" aria-label="Home">
+      <span class="brand-mark">∑</span>
+      <span class="brand-name">Ged-Bestie</span>
+    </button>
+    <nav class="topnav">
+      <button data-nav="home">Home</button>
+      <button data-nav="practice-setup">Practice</button>
+      <button data-nav="test-setup">Test</button>
+      <button data-tool="calc" title="Calculator">🧮</button>
+      <button data-tool="formulas" title="Formula sheet">📐</button>
+    </nav>
+  </header>
+
+  <main id="app" class="container" aria-live="polite"></main>
+
+  <!-- Toast / level-up / badge notifier -->
+  <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+
+  <!-- Confetti canvas -->
+  <canvas id="confetti" class="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- Modals -->
+  <div id="modal-root" class="modal-root hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal">
+      <button class="modal-close" data-close aria-label="Close">×</button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <small>GED Math practice · made for one focused student</small>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
