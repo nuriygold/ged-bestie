@@ -1,0 +1,313 @@
+[
+  {
+    "id": "ar-1",
+    "category": "basic arithmetic",
+    "difficulty": "easy",
+    "inputType": "multiple-choice",
+    "question": "What is 47 + 68?",
+    "choices": ["105", "115", "125", "95"],
+    "correctAnswer": 1,
+    "explanation": "47 + 68 = 115. Add the ones: 7 + 8 = 15 (carry 1). Add the tens: 4 + 6 + 1 = 11."
+  },
+  {
+    "id": "ar-2",
+    "category": "basic arithmetic",
+    "difficulty": "easy",
+    "inputType": "numeric",
+    "question": "Calculate: 204 − 87",
+    "correctAnswer": "117",
+    "explanation": "204 − 87. Borrow from the tens: 204 − 87 = 117."
+  },
+  {
+    "id": "ar-3",
+    "category": "basic arithmetic",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "What is 12 × 15?",
+    "choices": ["160", "180", "150", "175"],
+    "correctAnswer": 1,
+    "explanation": "12 × 15 = 12 × (10 + 5) = 120 + 60 = 180."
+  },
+  {
+    "id": "ar-4",
+    "category": "basic arithmetic",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "Divide: 144 ÷ 12",
+    "correctAnswer": "12",
+    "explanation": "12 × 12 = 144, so 144 ÷ 12 = 12."
+  },
+
+  {
+    "id": "fr-1",
+    "category": "fractions/decimals/percents",
+    "difficulty": "easy",
+    "inputType": "multiple-choice",
+    "question": "Which fraction is equivalent to 0.75?",
+    "choices": ["1/2", "2/3", "3/4", "7/10"],
+    "correctAnswer": 2,
+    "explanation": "0.75 = 75/100 = 3/4 (divide numerator and denominator by 25)."
+  },
+  {
+    "id": "fr-2",
+    "category": "fractions/decimals/percents",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "What is 25% of 80? Enter the number.",
+    "correctAnswer": "20",
+    "explanation": "25% = 1/4. One-fourth of 80 is 80 ÷ 4 = 20."
+  },
+  {
+    "id": "fr-3",
+    "category": "fractions/decimals/percents",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "Simplify: 1/2 + 1/3",
+    "choices": ["2/5", "3/5", "5/6", "2/3"],
+    "correctAnswer": 2,
+    "explanation": "Common denominator is 6: 1/2 = 3/6, 1/3 = 2/6. 3/6 + 2/6 = 5/6."
+  },
+  {
+    "id": "fr-4",
+    "category": "fractions/decimals/percents",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "A jacket costs $80 and is marked down 15%. What is the sale price in dollars?",
+    "correctAnswer": "68",
+    "explanation": "15% of 80 = 12. 80 − 12 = 68. Sale price is $68."
+  },
+
+  {
+    "id": "rp-1",
+    "category": "ratios and proportions",
+    "difficulty": "easy",
+    "inputType": "multiple-choice",
+    "question": "A recipe uses 2 cups of flour for every 3 cups of milk. How many cups of flour are needed for 9 cups of milk?",
+    "choices": ["4", "5", "6", "7"],
+    "correctAnswer": 2,
+    "explanation": "Ratio 2:3 scales to 6:9 (multiply both sides by 3). Flour = 6 cups."
+  },
+  {
+    "id": "rp-2",
+    "category": "ratios and proportions",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "If 5 pencils cost $1.25, how much do 12 pencils cost (in dollars)?",
+    "correctAnswer": "3",
+    "explanation": "Unit price = 1.25 ÷ 5 = $0.25 per pencil. 12 × 0.25 = $3.00."
+  },
+  {
+    "id": "rp-3",
+    "category": "ratios and proportions",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "A map uses 1 inch = 25 miles. Two cities are 3.5 inches apart on the map. How many miles apart are they?",
+    "choices": ["75 miles", "87.5 miles", "100 miles", "125 miles"],
+    "correctAnswer": 1,
+    "explanation": "3.5 × 25 = 87.5 miles."
+  },
+  {
+    "id": "rp-4",
+    "category": "ratios and proportions",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "A truck travels 180 miles on 12 gallons of gas. At that rate, how many miles will it travel on 20 gallons?",
+    "correctAnswer": "300",
+    "explanation": "Miles per gallon = 180 ÷ 12 = 15. 15 × 20 = 300 miles."
+  },
+
+  {
+    "id": "al-1",
+    "category": "algebra basics",
+    "difficulty": "easy",
+    "inputType": "multiple-choice",
+    "question": "Solve for x: 2x + 4 = 10",
+    "choices": ["x = 2", "x = 3", "x = 5", "x = 7"],
+    "correctAnswer": 1,
+    "explanation": "Subtract 4 from both sides: 2x = 6. Divide by 2: x = 3."
+  },
+  {
+    "id": "al-2",
+    "category": "algebra basics",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "Solve for x: 3(x − 2) = 15. Enter x.",
+    "correctAnswer": "7",
+    "explanation": "Divide both sides by 3: x − 2 = 5. Add 2: x = 7."
+  },
+  {
+    "id": "al-3",
+    "category": "algebra basics",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "If y = 4x − 3, what is y when x = 5?",
+    "choices": ["17", "18", "20", "23"],
+    "correctAnswer": 0,
+    "explanation": "y = 4(5) − 3 = 20 − 3 = 17."
+  },
+  {
+    "id": "al-4",
+    "category": "algebra basics",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "Solve for x: (x / 4) + 3 = 11",
+    "correctAnswer": "32",
+    "explanation": "Subtract 3: x / 4 = 8. Multiply by 4: x = 32."
+  },
+
+  {
+    "id": "ee-1",
+    "category": "expressions and equations",
+    "difficulty": "easy",
+    "inputType": "multiple-choice",
+    "question": "Simplify: 3x + 5 − x + 2",
+    "choices": ["2x + 3", "2x + 7", "4x + 7", "3x + 7"],
+    "correctAnswer": 1,
+    "explanation": "Combine like terms: (3x − x) + (5 + 2) = 2x + 7."
+  },
+  {
+    "id": "ee-2",
+    "category": "expressions and equations",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "Evaluate 2a² − b when a = 3 and b = 4.",
+    "correctAnswer": "14",
+    "explanation": "2(3)² − 4 = 2(9) − 4 = 18 − 4 = 14."
+  },
+  {
+    "id": "ee-3",
+    "category": "expressions and equations",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "Which expression equals 6(x + 2)?",
+    "choices": ["6x + 2", "6x + 12", "x + 12", "6x + 8"],
+    "correctAnswer": 1,
+    "explanation": "Distribute: 6·x + 6·2 = 6x + 12."
+  },
+  {
+    "id": "ee-4",
+    "category": "expressions and equations",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "Solve: 5x − 7 = 2x + 8. Enter x.",
+    "correctAnswer": "5",
+    "explanation": "Subtract 2x: 3x − 7 = 8. Add 7: 3x = 15. Divide by 3: x = 5."
+  },
+
+  {
+    "id": "ge-1",
+    "category": "geometry",
+    "difficulty": "easy",
+    "inputType": "multiple-choice",
+    "question": "What is the area of a rectangle with length 8 and width 5?",
+    "choices": ["13", "26", "40", "45"],
+    "correctAnswer": 2,
+    "explanation": "Area = length × width = 8 × 5 = 40."
+  },
+  {
+    "id": "ge-2",
+    "category": "geometry",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "What is the perimeter of a square with side length 9?",
+    "correctAnswer": "36",
+    "explanation": "Perimeter of a square = 4 × side = 4 × 9 = 36."
+  },
+  {
+    "id": "ge-3",
+    "category": "geometry",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "A right triangle has legs of length 3 and 4. What is the hypotenuse?",
+    "choices": ["5", "6", "7", "25"],
+    "correctAnswer": 0,
+    "explanation": "Pythagorean theorem: c² = 3² + 4² = 9 + 16 = 25. So c = 5."
+  },
+  {
+    "id": "ge-4",
+    "category": "geometry",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "A cylinder has radius 3 and height 10. What is its volume? Use π ≈ 3.14 and round to the nearest whole number.",
+    "correctAnswer": "283",
+    "explanation": "V = π r² h = 3.14 × 9 × 10 = 282.6 ≈ 283."
+  },
+
+  {
+    "id": "wp-1",
+    "category": "word problems",
+    "difficulty": "easy",
+    "inputType": "multiple-choice",
+    "question": "Maria has $45. She buys 3 notebooks at $4 each. How much money does she have left?",
+    "choices": ["$33", "$35", "$37", "$41"],
+    "correctAnswer": 0,
+    "explanation": "3 × 4 = 12. 45 − 12 = $33."
+  },
+  {
+    "id": "wp-2",
+    "category": "word problems",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "A train leaves the station at 2:15 PM and arrives at 5:45 PM. How many minutes was the trip?",
+    "correctAnswer": "210",
+    "explanation": "From 2:15 to 5:15 is 3 hours = 180 min. Plus 30 more minutes = 210 minutes."
+  },
+  {
+    "id": "wp-3",
+    "category": "word problems",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "Ben earns $14 per hour. If he works 32 hours in a week, how much does he earn?",
+    "choices": ["$408", "$428", "$448", "$468"],
+    "correctAnswer": 2,
+    "explanation": "14 × 32 = 14 × 30 + 14 × 2 = 420 + 28 = $448."
+  },
+  {
+    "id": "wp-4",
+    "category": "word problems",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "A tank is 3/5 full with 60 gallons of water. What is the tank's total capacity in gallons?",
+    "correctAnswer": "100",
+    "explanation": "3/5 of capacity = 60. Capacity = 60 ÷ (3/5) = 60 × 5/3 = 100 gallons."
+  },
+
+  {
+    "id": "dg-1",
+    "category": "data/graphs",
+    "difficulty": "easy",
+    "inputType": "multiple-choice",
+    "question": "A class took a quiz with scores: 70, 80, 80, 90, 100. What is the mean?",
+    "choices": ["80", "82", "84", "90"],
+    "correctAnswer": 2,
+    "explanation": "Sum = 420. Mean = 420 ÷ 5 = 84."
+  },
+  {
+    "id": "dg-2",
+    "category": "data/graphs",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "Find the median of: 3, 7, 9, 12, 14, 18, 20",
+    "correctAnswer": "12",
+    "explanation": "With 7 values sorted ascending, the middle (4th) value is 12."
+  },
+  {
+    "id": "dg-3",
+    "category": "data/graphs",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "A bag has 4 red, 3 blue, and 5 green marbles. If you draw one at random, what is the probability it is blue?",
+    "choices": ["1/4", "1/3", "3/12", "3/11"],
+    "correctAnswer": 0,
+    "explanation": "Total marbles = 12. P(blue) = 3/12 = 1/4."
+  },
+  {
+    "id": "dg-4",
+    "category": "data/graphs",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "On a bar graph, Monday sales were $120, Tuesday $80, Wednesday $150, Thursday $110, Friday $90. What is the range (in dollars)?",
+    "correctAnswer": "70",
+    "explanation": "Range = max − min = 150 − 80 = 70."
+  }
+]
