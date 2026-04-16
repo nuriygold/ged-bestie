@@ -1,4 +1,4 @@
-# Ged-Bestie — GED Math Practice
+# GED-BFF — GED Math Practice
 
 A clean, lightweight web app for practicing GED-style math questions. Single-page, zero build step, zero runtime dependencies — just a tiny Node server that ships static files.
 

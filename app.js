@@ -1,4 +1,4 @@
-// Ged-Bestie client app. Single-file SPA using a tiny hash-free view switcher.
+// GED-BFF client app. Single-file SPA using a tiny hash-free view switcher.
 import {
   CATEGORIES,
   buildQuiz,
@@ -63,7 +63,7 @@ function renderHome() {
 
   app.innerHTML = `
     <section class="card">
-      <h1>Welcome to Ged-Bestie 👋</h1>
+      <h1>Welcome to GED-BFF 👋</h1>
       <p class="muted">A lightweight GED Math practice app. Pick a mode to get started.</p>
       <div class="tile-grid">
         <button class="tile" data-go="practice-setup">

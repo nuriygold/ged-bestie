@@ -5,6 +5,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -20,7 +21,7 @@ const MIME = {
   ".txt": "text/plain; charset=utf-8"
 };
 
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   try {
     const urlPath = decodeURIComponent(new URL(req.url, "http://x").pathname);
     let filePath = path.join(__dirname, urlPath === "/" ? "/index.html" : urlPath);
@@ -51,8 +52,17 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(500, { "Content-Type": "text/plain" });
     res.end("Server error: " + err.message);
   }
-});
+}
 
-server.listen(PORT, () => {
-  console.log(`ged-bestie dev server → http://localhost:${PORT}`);
-});
+// Export a request handler so this file can run as a Vercel function.
+export default function vercelHandler(req, res) {
+  return handleRequest(req, res);
+}
+
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === __filename;
+if (isDirectRun) {
+  const server = http.createServer(handleRequest);
+  server.listen(PORT, () => {
+    console.log(`ged-bff dev server -> http://localhost:${PORT}`);
+  });
+}

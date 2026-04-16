@@ -1,7 +1,7 @@
 // Tiny localStorage wrapper. One-user app → one profile keyed by STORAGE_KEY.
 import { createProfile, migrateProfile } from "./profile.js";
 
-const STORAGE_KEY = "ged-bestie:profile:v1";
+const STORAGE_KEY = "ged-bff:profile:v1";
 
 function hasStorage() {
   try {
