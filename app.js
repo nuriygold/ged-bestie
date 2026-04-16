@@ -37,6 +37,33 @@ const FOOTER_TAGLINES = [
   "You are lowkey a math legend.",
   "Zero doubts. Just reps.",
   "Slay the test. Crown yourself."
+  "Locked in, legend. Your future self is proud.",
+  "You study like a starter, not a bench player.",
+  "That brain work is varsity-level, my guy.",
+  "Focus this clean? Certified clutch mode.",
+  "You bring captain energy every session.",
+  "Calm, sharp, and built for big scores.",
+  "Heavy grind. Heavy glow-up.",
+  "GED-BFF says: you are built different."
+];
+
+const HOME_FAQS = [
+  {
+    q: "How many questions should I do per day?",
+    a: "Start with 10–20 focused questions. If your accuracy stays above 70%, add another short set."
+  },
+  {
+    q: "Should I practice by category or mixed?",
+    a: "Use category mode first to build confidence, then switch to mixed sets so your brain learns to identify problem types fast."
+  },
+  {
+    q: "What if I keep missing the same style of problem?",
+    a: "Review the explanation, retry a similar question immediately, and make a one-line note about the mistake pattern."
+  },
+  {
+    q: "How often should I take a timed test?",
+    a: "Aim for 2–3 timed sets each week and spend more time reviewing misses than taking new tests."
+  }
 ];
 
 const ACRONYM_BY_CATEGORY = {
@@ -96,6 +123,8 @@ const state = {
     timeMinutes: 15
   },
   profile: null         // loaded from localStorage via storage.js
+  sessionStartedAt: Date.now(),
+  breakShown: false
 };
 
 const app = document.getElementById("app");
@@ -103,6 +132,9 @@ const app = document.getElementById("app");
 // ---------------- Nav wiring ----------------
 document.querySelectorAll("[data-nav]").forEach(btn => {
   btn.addEventListener("click", () => navigate(btn.dataset.nav));
+});
+document.querySelectorAll("[data-close]").forEach(btn => {
+  btn.addEventListener("click", closeModal);
 });
 
 document.querySelectorAll("[data-tool]").forEach(btn => {
@@ -180,6 +212,11 @@ function renderHome() {
 
     <section class="card">
       <h2>Choose a mode</h2>
+    <section class="card hero home-hero">
+      <p class="eyebrow">GED Math prep, leveled up</p>
+      <h1>Welcome to GED-BFF 👋</h1>
+      <p class="muted">A lightweight GED Math practice app with game energy, coaching, and visual walk-throughs.</p>
+      <p class="muted">Practice smarter with focused drills, timed sets, and quick review loops.</p>
       <div class="tile-grid">
         <button class="tile" data-go="practice-setup">
           <h3>📘 Start Practice</h3>
@@ -189,6 +226,18 @@ function renderHome() {
           <h3>⏱️ Start Timed Test</h3>
           <p>Answer a set of questions against the clock, then review your score.</p>
         </button>
+        <button class="tile" id="tour-btn">
+          <h3>🧭 Quick tutorial</h3>
+          <p>See exactly where to click, how practice works, and where to review.</p>
+        </button>
+        <button class="tile" id="mini-game-btn">
+          <h3>🏀 Mini hoop break game</h3>
+          <p>Lo-fi tap game for breaks. No math questions, just chill shots.</p>
+        </button>
+      </div>
+      <div class="quick-pills" aria-label="Quick actions">
+        <button class="pill-btn" data-go="practice-setup">Warm up (10 Q)</button>
+        <button class="pill-btn" data-go="test-setup">Timed set (15 min)</button>
       </div>
     </section>
 
@@ -207,10 +256,25 @@ function renderHome() {
         </tbody>
       </table>
     </section>
+
+    <section class="card">
+      <h2>Got questions? Quick answers.</h2>
+      <p class="muted">If you had a hundred more questions, start with these common ones:</p>
+      <div class="faq-list">
+        ${HOME_FAQS.map(item => `
+          <details class="faq-item">
+            <summary>${escapeHtml(item.q)}</summary>
+            <p>${escapeHtml(item.a)}</p>
+          </details>
+        `).join("")}
+      </div>
+    </section>
   `;
   app.querySelectorAll("[data-go]").forEach(el =>
     el.addEventListener("click", () => navigate(el.dataset.go))
   );
+  app.querySelector("#tour-btn")?.addEventListener("click", openTutorialModal);
+  app.querySelector("#mini-game-btn")?.addEventListener("click", openMiniGameModal);
 }
 
 function renderSetup(mode) {
@@ -275,6 +339,8 @@ function startQuiz({ mode, category, count, timeMinutes }) {
   state.answers = new Array(state.quiz.length).fill(null);
   state.index = 0;
   state.revealed = false;
+  state.sessionStartedAt = Date.now();
+  state.breakShown = false;
 
   if (mode === "test") {
     state.timer = {
@@ -306,13 +372,20 @@ function renderQuestion() {
         ${timerHtml}
       </div>
       <div class="progress-bar"><span style="width:${progressPct}%"></span></div>
+      ${renderBreakReminder()}
 
       <div class="q-cat">${escapeHtml(q.category)} · ${escapeHtml(q.difficulty || "")}</div>
       <div class="q-text">${escapeHtml(q.question)}</div>
+      ${renderShotMeter(q)}
 
       ${renderAnswerControls(q)}
 
       <div id="feedback-slot"></div>
+
+      <div class="btn-row social-row">
+        <button class="btn ghost" id="share-auntie">Share with Auntie</button>
+        <button class="btn ghost" id="ask-auntie">Ask Auntie how she'd solve this</button>
+      </div>
 
       <div class="btn-row">
         ${renderNavButtons()}
@@ -322,6 +395,9 @@ function renderQuestion() {
 
   wireAnswerControls();
   wireNavButtons();
+  app.querySelector("#share-auntie")?.addEventListener("click", () => shareQuestion(q, false));
+  app.querySelector("#ask-auntie")?.addEventListener("click", () => shareQuestion(q, true));
+  app.querySelector("#break-mini-game")?.addEventListener("click", openMiniGameModal);
 
   // Practice mode: if already revealed (user navigated back), redisplay feedback.
   if (state.mode === "practice" && state.revealed) {
@@ -355,6 +431,36 @@ function renderAnswerControls(q) {
             <span>${escapeHtml(c)}</span>
           </button>`;
       }).join("")}
+    </div>
+  `;
+}
+
+function renderShotMeter(q) {
+  const difficulty = (q.difficulty || "medium").toLowerCase();
+  const distance = difficulty === "easy" ? 32 : difficulty === "hard" ? 72 : 52;
+  const label = difficulty === "easy" ? "Close shot" : difficulty === "hard" ? "Deep 3" : "Mid-range";
+  return `
+    <div class="shot-meter" aria-label="Basketball challenge meter">
+      <div class="shot-head">
+        <strong>🏀 ${escapeHtml(label)}</strong>
+        <span>${distance}% distance</span>
+      </div>
+      <div class="court">
+        <div class="rim" aria-hidden="true">🧺</div>
+        <div class="ball" style="left:${distance}%;" aria-hidden="true">🏀</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderBreakReminder() {
+  const elapsedMin = Math.floor((Date.now() - state.sessionStartedAt) / 60000);
+  if (elapsedMin < 20 || state.breakShown) return "";
+  state.breakShown = true;
+  return `
+    <div class="break-reminder">
+      ⏳ You’ve been grinding for ${elapsedMin} minutes. Take a 2-minute water break, then come back strong.
+      <button class="btn ghost break-play" id="break-mini-game">Play mini hoop break</button>
     </div>
   `;
 }
@@ -526,6 +632,7 @@ function showFeedback(q, userAns) {
 function renderResults() {
   clearTimer();
   const result = scoreQuiz(state.quiz, state.answers);
+  const recommendation = buildScoreRecommendation(result);
 
   // In test mode, apply unanswered questions to profile stats.
   if (state.mode === "test") {
@@ -606,9 +713,15 @@ function renderResults() {
           ? ` · time used ${formatTime(state.timer.total - state.timer.remaining)}`
           : ""
       }</p>
+      <div class="recommend ${recommendation.tone}">
+        <strong>${escapeHtml(recommendation.title)}</strong>
+        <p>${escapeHtml(recommendation.body)}</p>
+      </div>
 
       <div class="btn-row" style="margin-top:14px">
         <button class="btn primary" id="again">Try another</button>
+        <button class="btn" id="focus-practice">Practice weakest subject</button>
+        <button class="btn ghost" id="share-results">Share score with Auntie</button>
         <button class="btn" data-go="home">Home</button>
       </div>
     </section>
@@ -631,6 +744,13 @@ function renderResults() {
   app.querySelector("#again").addEventListener("click", () =>
     navigate(state.mode === "test" ? "test-setup" : "practice-setup")
   );
+  app.querySelector("#focus-practice")?.addEventListener("click", () => {
+    state.settings.category = recommendation.focusCategory || "all";
+    navigate("practice-setup");
+    const cat = app.querySelector("#cat");
+    if (cat && recommendation.focusCategory) cat.value = recommendation.focusCategory;
+  });
+  app.querySelector("#share-results")?.addEventListener("click", () => shareResults(result, recommendation));
 }
 
 function formatUserAnswer(q, userAns) {
@@ -654,10 +774,16 @@ function buildWalkthroughSteps({ question, userAnswer, correctText }) {
   const setupLine = question.inputType === "numeric"
     ? "Write the equation from the words, then plug in the known numbers."
     : "Eliminate weak choices first, then verify the last best choice."
+  const acronymLetters = hint.label.split("").map((letter, idx) => `${letter}: ${hint.meaning.split(",")[idx]?.trim() || "Apply the step"}`);
+  const equationLine = question.inputType === "numeric"
+    ? "Equation path: given values → substitute numbers → isolate unknown → solve."
+    : "Choice path: remove impossible options → compare remaining choices → select best evidence.";
 
   return [
-    `Acronym check: ${hint.label} = ${hint.meaning}`,
+    `Acronym check: ${hint.label}`,
+    ...acronymLetters,
     `Set it up: ${setupLine}`,
+    equationLine,
     `Student attempt: ${userText}`,
     `Correct result: ${correctText}`,
     "Coach note: slow down on setup, then re-check units/signs before final answer."
@@ -864,6 +990,135 @@ function openFormulas() {
 }
 
 // ---------------- Footer taglines ----------------
+function buildScoreRecommendation(result) {
+  const weakest = Object.entries(result.byCategory)
+    .map(([category, data]) => ({ category, pct: Math.round((data.correct / data.total) * 100) }))
+    .sort((a, b) => a.pct - b.pct)[0];
+  if (result.percent >= 85) {
+    return {
+      tone: "high",
+      title: "🔥 Elite work.",
+      body: "You are test-ready. Keep momentum with one timed set every other day and maintain speed checks.",
+      focusCategory: weakest?.category || null
+    };
+  }
+  if (result.percent >= 65) {
+    return {
+      tone: "mid",
+      title: "📈 Solid progress.",
+      body: `You're close. Spend next session on ${weakest?.category || "your lowest category"} and re-run a short timed set after.`,
+      focusCategory: weakest?.category || null
+    };
+  }
+  return {
+    tone: "low",
+    title: "🛠 Build mode (that’s okay).",
+    body: `Next best move: focus on ${weakest?.category || "foundational skills"} first, then do 5 practice questions before another test.`,
+    focusCategory: weakest?.category || null
+  };
+}
+
+async function shareQuestion(q, askStyle) {
+  const prompt = askStyle
+    ? `Auntie, how would you solve this?\n\n${q.question}\n\nCan you show your setup and steps?`
+    : `Can you quiz me on this GED question?\n\n${q.question}`;
+  await copyOrShare(prompt, askStyle ? "Question sent for coaching." : "Question copied to share.");
+}
+
+async function shareResults(result, recommendation) {
+  const text = `I scored ${result.percent}% on GED-BFF (${result.correct}/${result.total}). ${recommendation.body}`;
+  await copyOrShare(text, "Results copied to share.");
+}
+
+async function copyOrShare(text, fallbackToast) {
+  try {
+    if (navigator.share) {
+      await navigator.share({ text });
+      return;
+    }
+    await navigator.clipboard.writeText(text);
+    alert(fallbackToast);
+  } catch {
+    // no-op: user may cancel share
+  }
+}
+
+function openTutorialModal() {
+  openModal(`
+    <h2>Quick app tutorial</h2>
+    <ol class="tutorial-list">
+      <li><strong>Top nav:</strong> Home, Practice, and Test are always at the top.</li>
+      <li><strong>Practice mode:</strong> Use “Check answer” to see coaching and pencil walkthroughs.</li>
+      <li><strong>Timed test:</strong> Use the GED timer to simulate real pressure.</li>
+      <li><strong>After score:</strong> Use “Practice weakest subject” for targeted reps.</li>
+      <li><strong>Share buttons:</strong> Tap “Share with Auntie” or “Ask Auntie how she'd solve this.”</li>
+    </ol>
+  `);
+}
+
+function openMiniGameModal() {
+  openModal(`
+    <h2>Mini Hoop Break 🏀</h2>
+    <p class="muted">Tap “Shoot” when the marker is in the green zone. No math, just quick focus reset.</p>
+    <div class="mini-game">
+      <div class="mini-track"><span id="mini-marker"></span><span class="mini-zone"></span></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn primary" id="mini-shoot">Shoot</button>
+        <button class="btn" id="mini-reset">Reset</button>
+      </div>
+      <p id="mini-score" class="muted">Buckets: 0 · Attempts: 0</p>
+    </div>
+  `);
+  startMiniGame();
+}
+
+let miniGame = null;
+function startMiniGame() {
+  let pos = 6;
+  let dir = 1;
+  let buckets = 0;
+  let attempts = 0;
+  const marker = document.getElementById("mini-marker");
+  const score = document.getElementById("mini-score");
+  if (!marker || !score) return;
+  const tick = () => {
+    pos += dir * 2.8;
+    if (pos >= 94 || pos <= 2) dir *= -1;
+    marker.style.left = `${pos}%`;
+  };
+  if (miniGame) clearInterval(miniGame);
+  miniGame = setInterval(tick, 85);
+
+  document.getElementById("mini-shoot")?.addEventListener("click", () => {
+    attempts += 1;
+    if (pos >= 44 && pos <= 58) buckets += 1;
+    score.textContent = `Buckets: ${buckets} · Attempts: ${attempts}`;
+  });
+  document.getElementById("mini-reset")?.addEventListener("click", () => {
+    buckets = 0;
+    attempts = 0;
+    score.textContent = `Buckets: ${buckets} · Attempts: ${attempts}`;
+  });
+}
+
+function openModal(html) {
+  const root = document.getElementById("modal-root");
+  const content = document.getElementById("modal-content");
+  if (!root || !content) return;
+  content.innerHTML = html;
+  root.classList.remove("hidden");
+}
+
+function closeModal() {
+  const root = document.getElementById("modal-root");
+  if (!root) return;
+  root.classList.add("hidden");
+  if (miniGame) {
+    clearInterval(miniGame);
+    miniGame = null;
+  }
+}
+
 function initFooterTaglines() {
   if (footerRotationHandle) return;
   const footerLine = document.querySelector(".footer small");
@@ -918,6 +1173,10 @@ function clearTimer() {
     state.timer.handle = null;
   }
 }
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeModal();
+});
 
 // ---------------- utils ----------------
 function escapeHtml(s) {
