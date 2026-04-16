@@ -124,6 +124,27 @@ a { color: var(--primary-dark); }
   background: linear-gradient(135deg, #ffffff, #f5f8ff);
   border-color: #dfe7f5;
 }
+.home-hero {
+  background:
+    radial-gradient(500px 220px at -5% -10%, rgba(123, 97, 255, 0.15), transparent 65%),
+    radial-gradient(560px 220px at 105% -10%, rgba(74, 144, 226, 0.16), transparent 65%),
+    linear-gradient(135deg, #ffffff, #f5f8ff);
+}
+.eyebrow {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid #d9e5fb;
+  background: #f3f7ff;
+  color: #3a5f94;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
 h1 { font-size: 1.6rem; margin: 4px 0 10px; }
 h2 { font-size: 1.25rem; margin: 0 0 10px; }
 h3 { font-size: 1.05rem; margin: 0 0 8px; }
@@ -211,8 +232,53 @@ p.muted { margin: 0 0 12px; }
 .tile p { margin: 0; color: var(--muted); font-size: 0.93rem; }
 .tile .tile-icon { font-size: 1.6rem; margin-bottom: 4px; display: inline-block; }
 
+.quick-pills {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pill-btn {
+  border: 1px solid #d8e3f7;
+  background: #fff;
+  color: #295692;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pill-btn:hover {
+  background: #eef5ff;
+  border-color: #c5d9fb;
+}
+
 @media (max-width: 520px) {
   .tile-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- FAQ ---------- */
+.faq-list {
+  display: grid;
+  gap: 10px;
+}
+.faq-item {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.faq-item[open] {
+  border-color: #cedbf4;
+  background: #f8fbff;
+}
+.faq-item summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+.faq-item p {
+  margin: 8px 0 2px;
+  color: var(--muted);
 }
 
 /* ---------- Mastery list ---------- */

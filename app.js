@@ -19,6 +19,25 @@ const FOOTER_TAGLINES = [
   "GED-BFF says: you are built different."
 ];
 
+const HOME_FAQS = [
+  {
+    q: "How many questions should I do per day?",
+    a: "Start with 10–20 focused questions. If your accuracy stays above 70%, add another short set."
+  },
+  {
+    q: "Should I practice by category or mixed?",
+    a: "Use category mode first to build confidence, then switch to mixed sets so your brain learns to identify problem types fast."
+  },
+  {
+    q: "What if I keep missing the same style of problem?",
+    a: "Review the explanation, retry a similar question immediately, and make a one-line note about the mistake pattern."
+  },
+  {
+    q: "How often should I take a timed test?",
+    a: "Aim for 2–3 timed sets each week and spend more time reviewing misses than taking new tests."
+  }
+];
+
 const ACRONYM_BY_CATEGORY = {
   "basic arithmetic": {
     label: "PEMDAS",
@@ -115,9 +134,11 @@ function renderHome() {
   }));
 
   app.innerHTML = `
-    <section class="card">
+    <section class="card hero home-hero">
+      <p class="eyebrow">GED Math prep, leveled up</p>
       <h1>Welcome to GED-BFF 👋</h1>
       <p class="muted">A lightweight GED Math practice app with game energy, coaching, and visual walk-throughs.</p>
+      <p class="muted">Practice smarter with focused drills, timed sets, and quick review loops.</p>
       <div class="tile-grid">
         <button class="tile" data-go="practice-setup">
           <h3>📘 Start Practice</h3>
@@ -136,6 +157,10 @@ function renderHome() {
           <p>Lo-fi tap game for breaks. No math questions, just chill shots.</p>
         </button>
       </div>
+      <div class="quick-pills" aria-label="Quick actions">
+        <button class="pill-btn" data-go="practice-setup">Warm up (10 Q)</button>
+        <button class="pill-btn" data-go="test-setup">Timed set (15 min)</button>
+      </div>
     </section>
 
     <section class="card">
@@ -147,6 +172,19 @@ function renderHome() {
           ${catCounts.map(r => `<tr><td>${escapeHtml(r.cat)}</td><td>${r.n}</td></tr>`).join("")}
         </tbody>
       </table>
+    </section>
+
+    <section class="card">
+      <h2>Got questions? Quick answers.</h2>
+      <p class="muted">If you had a hundred more questions, start with these common ones:</p>
+      <div class="faq-list">
+        ${HOME_FAQS.map(item => `
+          <details class="faq-item">
+            <summary>${escapeHtml(item.q)}</summary>
+            <p>${escapeHtml(item.a)}</p>
+          </details>
+        `).join("")}
+      </div>
     </section>
   `;
   app.querySelectorAll("[data-go]").forEach(el =>
