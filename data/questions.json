@@ -37,6 +37,25 @@
     "correctAnswer": "12",
     "explanation": "12 × 12 = 144, so 144 ÷ 12 = 12."
   },
+  {
+    "id": "ar-5",
+    "category": "basic arithmetic",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "Evaluate: 6 + 2 × (5 − 1)",
+    "choices": ["14", "32", "28", "10"],
+    "correctAnswer": 0,
+    "explanation": "Order of operations: parentheses first, then multiply, then add. 5 − 1 = 4. 2 × 4 = 8. 6 + 8 = 14."
+  },
+  {
+    "id": "ar-6",
+    "category": "basic arithmetic",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "What is −8 + 3 × (−4)?",
+    "correctAnswer": "-20",
+    "explanation": "Multiply first: 3 × (−4) = −12. Then add: −8 + (−12) = −20."
+  },
 
   {
     "id": "fr-1",
@@ -75,6 +94,34 @@
     "question": "A jacket costs $80 and is marked down 15%. What is the sale price in dollars?",
     "correctAnswer": "68",
     "explanation": "15% of 80 = 12. 80 − 12 = 68. Sale price is $68."
+  },
+  {
+    "id": "fr-5",
+    "category": "fractions/decimals/percents",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "Convert 3/5 to a percent.",
+    "choices": ["35%", "53%", "60%", "65%"],
+    "correctAnswer": 2,
+    "explanation": "3/5 = 0.6 = 60%. (Divide 3 by 5; multiply by 100.)"
+  },
+  {
+    "id": "fr-6",
+    "category": "fractions/decimals/percents",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "Multiply: 2/3 × 9/4. Enter the simplified decimal.",
+    "correctAnswer": "1.5",
+    "explanation": "2/3 × 9/4 = 18/12 = 3/2 = 1.5."
+  },
+  {
+    "id": "fr-7",
+    "category": "fractions/decimals/percents",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "A TV's price rises from $400 to $460. What is the percent increase?",
+    "correctAnswer": "15",
+    "explanation": "Increase = 460 − 400 = 60. Percent increase = 60/400 × 100 = 15%."
   },
 
   {
@@ -115,6 +162,25 @@
     "correctAnswer": "300",
     "explanation": "Miles per gallon = 180 ÷ 12 = 15. 15 × 20 = 300 miles."
   },
+  {
+    "id": "rp-5",
+    "category": "ratios and proportions",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "A class has 12 boys and 18 girls. What is the ratio of boys to total students (in simplest form)?",
+    "choices": ["12:18", "2:3", "2:5", "1:3"],
+    "correctAnswer": 2,
+    "explanation": "Total students = 12 + 18 = 30. Ratio = 12:30 = 2:5."
+  },
+  {
+    "id": "rp-6",
+    "category": "ratios and proportions",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "Solve the proportion for x: 4/6 = x/24",
+    "correctAnswer": "16",
+    "explanation": "Cross-multiply: 4 × 24 = 6x → 96 = 6x → x = 16."
+  },
 
   {
     "id": "al-1",
@@ -153,6 +219,25 @@
     "question": "Solve for x: (x / 4) + 3 = 11",
     "correctAnswer": "32",
     "explanation": "Subtract 3: x / 4 = 8. Multiply by 4: x = 32."
+  },
+  {
+    "id": "al-5",
+    "category": "algebra basics",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "Which line has a slope of 2 and passes through (0, −1)?",
+    "choices": ["y = −x + 2", "y = 2x − 1", "y = 2x + 1", "y = x − 2"],
+    "correctAnswer": 1,
+    "explanation": "Slope-intercept y = mx + b. Slope m = 2, y-intercept b = −1 → y = 2x − 1."
+  },
+  {
+    "id": "al-6",
+    "category": "algebra basics",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "What is the slope of the line through (2, 3) and (6, 11)?",
+    "correctAnswer": "2",
+    "explanation": "Slope = (11 − 3) / (6 − 2) = 8/4 = 2."
   },
 
   {
@@ -193,6 +278,25 @@
     "correctAnswer": "5",
     "explanation": "Subtract 2x: 3x − 7 = 8. Add 7: 3x = 15. Divide by 3: x = 5."
   },
+  {
+    "id": "ee-5",
+    "category": "expressions and equations",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "Factor: x² + 5x + 6",
+    "choices": ["(x + 2)(x + 3)", "(x + 1)(x + 6)", "(x − 2)(x − 3)", "(x + 2)(x − 3)"],
+    "correctAnswer": 0,
+    "explanation": "Find two numbers that multiply to 6 and add to 5: 2 and 3. So (x + 2)(x + 3)."
+  },
+  {
+    "id": "ee-6",
+    "category": "expressions and equations",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "Solve for x: x² = 49. Enter the positive root.",
+    "correctAnswer": "7",
+    "explanation": "x = ±√49 = ±7. The positive root is 7."
+  },
 
   {
     "id": "ge-1",
@@ -231,6 +335,34 @@
     "question": "A cylinder has radius 3 and height 10. What is its volume? Use π ≈ 3.14 and round to the nearest whole number.",
     "correctAnswer": "283",
     "explanation": "V = π r² h = 3.14 × 9 × 10 = 282.6 ≈ 283."
+  },
+  {
+    "id": "ge-5",
+    "category": "geometry",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "What is the area of a triangle with base 10 and height 6?",
+    "choices": ["16", "30", "60", "36"],
+    "correctAnswer": 1,
+    "explanation": "Area = ½ × base × height = ½ × 10 × 6 = 30."
+  },
+  {
+    "id": "ge-6",
+    "category": "geometry",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "A circle has radius 5. What is its circumference? Use π ≈ 3.14 and round to the nearest whole number.",
+    "correctAnswer": "31",
+    "explanation": "C = 2πr = 2 × 3.14 × 5 = 31.4 ≈ 31."
+  },
+  {
+    "id": "ge-7",
+    "category": "geometry",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "A rectangular prism is 4 × 3 × 5. What is its volume?",
+    "correctAnswer": "60",
+    "explanation": "V = l × w × h = 4 × 3 × 5 = 60."
   },
 
   {
@@ -271,6 +403,25 @@
     "correctAnswer": "100",
     "explanation": "3/5 of capacity = 60. Capacity = 60 ÷ (3/5) = 60 × 5/3 = 100 gallons."
   },
+  {
+    "id": "wp-5",
+    "category": "word problems",
+    "difficulty": "medium",
+    "inputType": "multiple-choice",
+    "question": "A car rental costs $30 per day plus $0.20 per mile. How much does a 3-day, 100-mile rental cost?",
+    "choices": ["$110", "$100", "$120", "$90"],
+    "correctAnswer": 0,
+    "explanation": "3 days: 3 × 30 = $90. Miles: 100 × 0.20 = $20. Total = 90 + 20 = $110."
+  },
+  {
+    "id": "wp-6",
+    "category": "word problems",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "A shirt is on sale for $34 after a 15% discount. What was the original price in dollars?",
+    "correctAnswer": "40",
+    "explanation": "Sale price = 85% of original. 34 ÷ 0.85 = 40. Original price was $40."
+  },
 
   {
     "id": "dg-1",
@@ -309,5 +460,33 @@
     "question": "On a bar graph, Monday sales were $120, Tuesday $80, Wednesday $150, Thursday $110, Friday $90. What is the range (in dollars)?",
     "correctAnswer": "70",
     "explanation": "Range = max − min = 150 − 80 = 70."
+  },
+  {
+    "id": "dg-5",
+    "category": "data/graphs",
+    "difficulty": "easy",
+    "inputType": "multiple-choice",
+    "question": "What is the mode of: 5, 7, 7, 8, 9, 7, 10?",
+    "choices": ["5", "7", "8", "10"],
+    "correctAnswer": 1,
+    "explanation": "The mode is the most frequent value. 7 appears three times."
+  },
+  {
+    "id": "dg-6",
+    "category": "data/graphs",
+    "difficulty": "medium",
+    "inputType": "numeric",
+    "question": "You flip a fair coin twice. What is the probability of getting heads both times? Enter as a decimal.",
+    "correctAnswer": "0.25",
+    "explanation": "Independent events: P(H and H) = 1/2 × 1/2 = 1/4 = 0.25."
+  },
+  {
+    "id": "dg-7",
+    "category": "data/graphs",
+    "difficulty": "hard",
+    "inputType": "numeric",
+    "question": "A sample of 4 numbers has a mean of 12. Three of the numbers are 10, 13, and 15. What is the fourth number?",
+    "correctAnswer": "10",
+    "explanation": "Sum must be 4 × 12 = 48. So far: 10 + 13 + 15 = 38. Fourth = 48 − 38 = 10."
   }
 ]
