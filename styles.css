@@ -1,19 +1,19 @@
 /* ---------- Theme ---------- */
 :root {
-  --bg: #f4f6fb;
-  --bg-grad: radial-gradient(1200px 600px at 10% -10%, #e8efff 0%, transparent 55%),
-             radial-gradient(900px 500px at 110% 10%, #f5e8ff 0%, transparent 60%),
+  --bg: #101722;
+  --bg-grad: radial-gradient(1200px 600px at 10% -10%, #1a2a42 0%, transparent 55%),
+             radial-gradient(900px 500px at 110% 10%, #18263a 0%, transparent 60%),
              var(--bg);
-  --surface: #ffffff;
-  --text: #141c2e;
-  --muted: #5b6577;
-  --primary: #4a90e2;
-  --primary-dark: #2f6fb8;
-  --accent: #7b61ff;
+  --surface: #f8fbff;
+  --text: #111d2e;
+  --muted: #56647a;
+  --primary: #2276d2;
+  --primary-dark: #195ca2;
+  --accent: #19a97f;
   --gold: #f4b324;
   --ok: #2ea66b;
   --bad: #d64545;
-  --border: #e4e8ef;
+  --border: #d6deea;
   --shadow: 0 2px 12px rgba(30, 50, 90, 0.06);
   --shadow-lg: 0 12px 40px rgba(30, 50, 90, 0.12);
   --radius: 14px;
@@ -407,6 +407,36 @@ select:focus, input:focus {
 }
 
 .numeric-wrap { margin-bottom: 16px; }
+.social-row { margin-bottom: 10px; }
+
+.break-reminder {
+  background: linear-gradient(135deg, #e5f4ff, #dff8f0);
+  border: 1px solid #b9d6f1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #234;
+}
+.break-reminder .break-play { margin-left: 8px; padding: 8px 10px; font-size: 0.88rem; }
+
+.shot-meter {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: #f3f8ff;
+}
+.shot-head { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.86rem; margin-bottom: 8px; }
+.court {
+  position: relative;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #fff, #f0f5fd);
+  border: 1px dashed #bfd0e7;
+}
+.court .rim { position: absolute; right: 8px; top: 9px; font-size: 1.4rem; }
+.court .ball { position: absolute; top: 9px; transform: translateX(-50%); font-size: 1.3rem; transition: left 0.3s ease; }
 
 .feedback {
   border-radius: 12px;
@@ -491,6 +521,40 @@ select:focus, input:focus {
   color: var(--primary-dark);
   line-height: 1;
   margin-bottom: 4px;
+}
+.recommend {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #f6f9ff;
+}
+.recommend p { margin: 4px 0 0; color: var(--muted); }
+.recommend.high { background: #e7f8ef; border-color: #b8dfc7; }
+.recommend.low { background: #fff0f0; border-color: #f0c8c8; }
+
+.tutorial-list { padding-left: 18px; display: grid; gap: 8px; }
+.mini-game { margin-top: 8px; }
+.mini-track {
+  height: 18px;
+  border-radius: 99px;
+  background: #dbe6f6;
+  position: relative;
+}
+#mini-marker {
+  position: absolute;
+  top: -4px;
+  width: 14px; height: 26px;
+  border-radius: 8px;
+  background: #234b7c;
+}
+.mini-zone {
+  position: absolute;
+  left: 44%;
+  width: 14%;
+  top: 0; bottom: 0;
+  border-radius: 99px;
+  background: rgba(37, 174, 125, 0.45);
 }
 .cat-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
 .cat-table th, .cat-table td {
