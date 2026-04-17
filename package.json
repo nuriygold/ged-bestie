@@ -2,12 +2,12 @@
   "name": "ged-bff",
   "version": "0.1.0",
   "private": true,
-  "description": "GED Math practice web app — single-page, zero-dependency.",
+  "description": "GED Math practice web app \u2014 single-page, zero-dependency.",
   "type": "module",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
-    "test": "node --test \"test/*.test.mjs\""
+    "test": "node --test test/*.test.mjs"
   },
   "engines": {
     "node": ">=18"
