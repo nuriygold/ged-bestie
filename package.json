@@ -9,6 +9,9 @@
     "start": "node server.mjs",
     "test": "node --test test/*.test.mjs"
   },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.4"
+  },
   "engines": {
     "node": ">=18"
   }
