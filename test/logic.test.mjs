@@ -29,6 +29,7 @@ import {
   createProfile,
   migrateProfile,
   applyAnswer,
+  recordExerciseAttempt,
   evaluateBadges,
   readinessScore,
   BADGES
@@ -247,7 +248,28 @@ test("migrateProfile handles missing fields gracefully", () => {
   const p = migrateProfile({ name: "Anthony", xp: 500 });
   assert.equal(p.name, "Anthony");
   assert.equal(p.xp, 500);
-  assert.ok(p.byCategory && p.missedDeck);
+  assert.ok(p.byCategory && p.missedDeck && Array.isArray(p.exerciseHistory));
+});
+
+test("migrateProfile backfills missing v2 fields", () => {
+  const p = migrateProfile({ schemaVersion: 2, name: "Anthony", sessions: "oops" });
+  assert.equal(p.schemaVersion, 2);
+  assert.ok(Array.isArray(p.sessions));
+  assert.ok(Array.isArray(p.exerciseHistory));
+});
+
+test("recordExerciseAttempt appends attempts and caps history length", () => {
+  let p = createProfile();
+  for (let i = 0; i < 1105; i += 1) {
+    p = recordExerciseAttempt(p, {
+      questionId: `q${i}`,
+      category: "geometry",
+      correct: i % 2 === 0
+    });
+  }
+  assert.equal(p.exerciseHistory.length, 1000);
+  assert.equal(p.exerciseHistory.at(-1).questionId, "q1104");
+  assert.equal(p.exerciseHistory[0].questionId, "q105");
 });
 
 test("question bank: valid fields, unique ids, all categories covered", () => {
