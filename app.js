@@ -97,6 +97,10 @@ const ACRONYM_BY_CATEGORY = {
 let footerRotationHandle = null;
 let confettiHandle = null;
 const calcState = { display: "0", left: null, op: null, pendingClear: false };
+const GED_BFF_CONFIG = {
+  gameId: "math-challenge",
+  bridgeVersion: "1.0"
+};
 
 // ---------------- State ----------------
 const state = {
@@ -120,6 +124,7 @@ const state = {
     count: 10,
     timeMinutes: 15
   },
+  questionStartedAtByIndex: {},
   sessionStartedAt: Date.now(),
   sessionId: null,
   breakShown: false
@@ -331,6 +336,7 @@ function startQuiz({ mode, category, count, timeMinutes }) {
   state.appliedIndices = new Set();
   state.index = 0;
   state.revealed = false;
+  state.questionStartedAtByIndex = {};
   state.sessionStartedAt = Date.now();
   state.sessionId = `${mode}-${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
   state.breakShown = false;
@@ -346,12 +352,25 @@ function startQuiz({ mode, category, count, timeMinutes }) {
   } else {
     state.timer = { enabled: false, total: 0, remaining: 0, handle: null };
   }
+  emitBridgeEvent("onGameStart", {
+    gameId: GED_BFF_CONFIG.gameId,
+    bridgeVersion: GED_BFF_CONFIG.bridgeVersion,
+    sessionId: state.sessionId,
+    gameMode: mode,
+    difficulty: resolveSessionDifficulty(state.quiz),
+    category,
+    questionCount: state.quiz.length,
+    startedAt: new Date(state.sessionStartedAt).toISOString()
+  });
   renderQuestion();
 }
 
 function renderQuestion() {
   const q = state.quiz[state.index];
   if (!q) return renderResults();
+  if (!state.questionStartedAtByIndex[state.index]) {
+    state.questionStartedAtByIndex[state.index] = Date.now();
+  }
 
   const progressPct = Math.round(((state.index) / state.quiz.length) * 100);
   const timerHtml = state.timer.enabled
@@ -577,6 +596,32 @@ function captureAnsweredQuestion(index) {
   state.profile = nextProfile;
   saveProfile(state.profile);
   state.appliedIndices.add(index);
+  const questionStartedAt = state.questionStartedAtByIndex[index] || state.sessionStartedAt;
+  const answerTimeSec = Number(((Date.now() - questionStartedAt) / 1000).toFixed(2));
+  const sessionAnswers = state.answers
+    .map((value, idx) => ({ value, idx }))
+    .filter(row => row.value !== null && row.value !== undefined && row.value !== "");
+  const sessionCorrect = sessionAnswers.reduce((acc, row) => (
+    acc + (isCorrect(state.quiz[row.idx], row.value) ? 1 : 0)
+  ), 0);
+
+  emitBridgeEvent("onQuestionAnswered", {
+    gameId: GED_BFF_CONFIG.gameId,
+    bridgeVersion: GED_BFF_CONFIG.bridgeVersion,
+    sessionId: state.sessionId,
+    gameMode: state.mode,
+    difficulty: q.difficulty || "unknown",
+    questionNumber: index + 1,
+    questionId: q.id,
+    isCorrect: correct,
+    userAnswer: formatUserAnswer(q, ans),
+    correctAnswer: expectedAnswer,
+    answerTimeSec,
+    correctSoFar: sessionCorrect,
+    score: sessionCorrect,
+    streak: state.profile.currentAnswerStreak || 0,
+    answeredAt: new Date().toISOString()
+  });
 
   showToast({ title: correct ? "✅ Correct" : "🧠 Keep going", body: `+${xpGained} XP`, gold: correct });
 
@@ -637,6 +682,8 @@ function renderResults() {
 
   const result = scoreQuiz(state.quiz, state.answers);
   const recommendation = buildScoreRecommendation(result);
+  const elapsedMs = Date.now() - state.sessionStartedAt;
+  const durationSec = Math.max(1, Math.round(elapsedMs / 1000));
 
   state.profile = finalizeSession(state.profile, {
     mode: state.mode,
@@ -655,6 +702,21 @@ function renderResults() {
   if (result.percent >= 85) {
     showToast({ title: "🔥 Session complete", body: `Strong finish: ${result.percent}%`, gold: true });
   }
+
+  emitBridgeEvent("onGameComplete", {
+    gameId: GED_BFF_CONFIG.gameId,
+    bridgeVersion: GED_BFF_CONFIG.bridgeVersion,
+    sessionId: state.sessionId,
+    gameMode: state.mode,
+    difficulty: resolveSessionDifficulty(state.quiz),
+    score: result.correct,
+    correct: result.correct,
+    incorrect: result.incorrect,
+    accuracyPct: result.percent,
+    maxStreak: state.profile.bestAnswerStreak || 0,
+    durationSec,
+    completedAt: new Date().toISOString()
+  });
 
   const catRows = Object.entries(result.byCategory)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -815,6 +877,23 @@ function buildScoreRecommendation(result) {
     body: `Next best move: focus on ${weakest?.category || "foundational skills"} first, then do 5 practice questions before another test.`,
     focusCategory: weakest?.category || null
   };
+}
+
+function resolveSessionDifficulty(quiz) {
+  const set = new Set((quiz || []).map(q => (q.difficulty || "unknown").toLowerCase()));
+  if (set.size === 0) return "unknown";
+  if (set.size === 1) return [...set][0];
+  return "mixed";
+}
+
+function emitBridgeEvent(eventName, payload) {
+  const bridge = typeof window !== "undefined" ? window.GED_BFF_BRIDGE : null;
+  if (!bridge || typeof bridge[eventName] !== "function") return;
+  Promise.resolve()
+    .then(() => bridge[eventName](payload))
+    .catch((err) => {
+      console.warn(`[GED_BFF_BRIDGE] ${eventName} failed`, err);
+    });
 }
 
 function summarizeExerciseHistory(profile) {
