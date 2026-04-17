@@ -15,6 +15,7 @@ import {
   finalizeSession,
   levelTitle,
   masteryTier,
+  recordExerciseAttempt,
   readinessScore,
   xpToLevel,
   xpToNextLevel
@@ -120,6 +121,7 @@ const state = {
     timeMinutes: 15
   },
   sessionStartedAt: Date.now(),
+  sessionId: null,
   breakShown: false
 };
 
@@ -175,7 +177,7 @@ function renderHome() {
   app.innerHTML = `
     <section class="card hero home-hero">
       <p class="eyebrow">GED Math prep, leveled up</p>
-      <h1>Welcome back, ${escapeHtml(profile.name || "Friend")} 👋</h1>
+      <h1>Welcome back, Anthony ✌🏾</h1>
       <p class="muted">A lightweight GED Math practice app with game energy, coaching, and visual walk-throughs.</p>
       <div class="stat-row">
         <div class="stat"><div class="num">Lv ${level}</div><div class="lbl">${escapeHtml(levelTitle(level))}</div></div>
@@ -243,6 +245,8 @@ function renderHome() {
         }).join("")}
       </div>
     </section>
+
+    ${renderProgressDataSection(profile)}
 
     <section class="card">
       <h2>Got questions? Quick answers.</h2>
@@ -328,6 +332,7 @@ function startQuiz({ mode, category, count, timeMinutes }) {
   state.index = 0;
   state.revealed = false;
   state.sessionStartedAt = Date.now();
+  state.sessionId = `${mode}-${Date.now()}-${Math.floor(Math.random() * 100_000)}`;
   state.breakShown = false;
 
   if (mode === "test") {
@@ -555,7 +560,20 @@ function captureAnsweredQuestion(index) {
   const correct = isCorrect(q, ans);
   const prevLevel = xpToLevel(state.profile?.xp || 0);
   const { profile: profAfterAnswer, xpGained } = applyAnswer(state.profile, q, correct);
-  const { profile: nextProfile, newlyEarned } = evaluateBadges(profAfterAnswer, { hourOfDay: new Date().getHours() });
+  const expectedAnswer = q.inputType === "numeric"
+    ? String(q.correctAnswer)
+    : `${choiceLetter(q.correctAnswer)}) ${q.choices[q.correctAnswer]}`;
+  const profWithHistory = recordExerciseAttempt(profAfterAnswer, {
+    sessionId: state.sessionId,
+    mode: state.mode,
+    questionId: q.id,
+    category: q.category,
+    difficulty: q.difficulty || "unknown",
+    correct,
+    userAnswer: formatUserAnswer(q, ans),
+    expectedAnswer
+  });
+  const { profile: nextProfile, newlyEarned } = evaluateBadges(profWithHistory, { hourOfDay: new Date().getHours() });
   state.profile = nextProfile;
   saveProfile(state.profile);
   state.appliedIndices.add(index);
@@ -797,6 +815,78 @@ function buildScoreRecommendation(result) {
     body: `Next best move: focus on ${weakest?.category || "foundational skills"} first, then do 5 practice questions before another test.`,
     focusCategory: weakest?.category || null
   };
+}
+
+function summarizeExerciseHistory(profile) {
+  const history = (profile.exerciseHistory || []).slice(-200);
+  if (history.length === 0) {
+    return {
+      recentAccuracy: 0,
+      attempts: [],
+      byCategory: []
+    };
+  }
+
+  const correct = history.filter(row => row.correct).length;
+  const byCategoryMap = {};
+  history.forEach(row => {
+    if (!byCategoryMap[row.category]) byCategoryMap[row.category] = { total: 0, correct: 0 };
+    byCategoryMap[row.category].total += 1;
+    byCategoryMap[row.category].correct += row.correct ? 1 : 0;
+  });
+  const byCategory = Object.entries(byCategoryMap)
+    .map(([category, agg]) => ({
+      category,
+      total: agg.total,
+      percent: Math.round((agg.correct / agg.total) * 100)
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6);
+
+  return {
+    recentAccuracy: Math.round((correct / history.length) * 100),
+    attempts: history.slice(-8).reverse(),
+    byCategory
+  };
+}
+
+function renderProgressDataSection(profile) {
+  const summary = summarizeExerciseHistory(profile);
+  if (!summary.attempts.length) {
+    return `
+      <section class="card">
+        <h2>Data-backed progress tracking</h2>
+        <p class="muted">Your historical per-exercise log starts after your first answered question.</p>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="card">
+      <h2>Data-backed progress tracking</h2>
+      <p class="muted">Historical accuracy (last ${Math.min(200, (profile.exerciseHistory || []).length)} exercises): <strong>${summary.recentAccuracy}%</strong></p>
+      <table class="cat-table" style="margin-top:8px">
+        <thead><tr><th>Category</th><th>Attempts</th><th>Accuracy</th></tr></thead>
+        <tbody>
+          ${summary.byCategory.map(row => `<tr><td>${escapeHtml(row.category)}</td><td>${row.total}</td><td>${row.percent}%</td></tr>`).join("")}
+        </tbody>
+      </table>
+      <h3 style="margin-top:14px">Recent exercises</h3>
+      <table class="cat-table">
+        <thead><tr><th>Time</th><th>Category</th><th>Result</th><th>Your answer</th></tr></thead>
+        <tbody>
+          ${summary.attempts.map(row => `
+            <tr>
+              <td>${escapeHtml(new Date(row.at).toLocaleString())}</td>
+              <td>${escapeHtml(row.category)}</td>
+              <td>${row.correct ? "✅ Correct" : "❌ Missed"}</td>
+              <td>${escapeHtml(String(row.userAnswer || "(skipped)"))}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </section>
+  `;
 }
 
 async function shareQuestion(q, askStyle) {

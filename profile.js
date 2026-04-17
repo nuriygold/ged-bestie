@@ -2,7 +2,7 @@
 // A "profile" is a plain JSON object persisted by storage.js.
 import { CATEGORIES } from "./logic.js";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /** XP awarded for a single answered question (with streak bonus). */
 export function xpForAnswer({ correct, answerStreak = 0 }) {
@@ -107,6 +107,7 @@ export function createProfile({ name = "Friend", targetDate = null } = {}) {
     missedDeck: [],    // question ids that need review
     badges: [],        // earned badge ids
     sessions: [],      // compact history: { at, mode, total, correct, percent }
+    exerciseHistory: [], // per-answer history for data tracking
     dailyChallenge: null, // { date, questionIds, completed, correct, total }
     preferences: { confetti: true, sound: false }
   };
@@ -115,12 +116,28 @@ export function createProfile({ name = "Friend", targetDate = null } = {}) {
 /** Migrate older profiles forward. */
 export function migrateProfile(p) {
   if (!p || typeof p !== "object") return createProfile();
-  if (p.schemaVersion === SCHEMA_VERSION) return p;
-  // v0 → v1: pad missing fields, preserve whatever's there.
+  // Any schema → latest: pad missing fields, preserve whatever's there.
   const fresh = createProfile({ name: p.name, targetDate: p.targetDate });
   return { ...fresh, ...p, schemaVersion: SCHEMA_VERSION,
     byCategory: { ...fresh.byCategory, ...(p.byCategory || {}) },
-    preferences: { ...fresh.preferences, ...(p.preferences || {}) }
+    preferences: { ...fresh.preferences, ...(p.preferences || {}) },
+    sessions: Array.isArray(p.sessions) ? p.sessions : fresh.sessions,
+    exerciseHistory: Array.isArray(p.exerciseHistory) ? p.exerciseHistory : fresh.exerciseHistory
+  };
+}
+
+/** Record one answered exercise for detailed analytics/history. */
+export function recordExerciseAttempt(profile, attempt) {
+  const history = [
+    ...(profile.exerciseHistory || []).slice(-999),
+    {
+      at: Date.now(),
+      ...attempt
+    }
+  ];
+  return {
+    ...profile,
+    exerciseHistory: history
   };
 }
 
