@@ -7,6 +7,19 @@ import {
   isCorrect,
   scoreQuiz
 } from "./logic.js";
+import {
+  applyAnswer,
+  BADGES,
+  createProfile,
+  evaluateBadges,
+  finalizeSession,
+  levelTitle,
+  masteryTier,
+  readinessScore,
+  xpToLevel,
+  xpToNextLevel
+} from "./profile.js";
+import { loadProfile, saveProfile } from "./storage.js";
 
 const FOOTER_TAGLINES = [
   "Locked in, legend. Your future self is proud.",
@@ -16,7 +29,14 @@ const FOOTER_TAGLINES = [
   "You bring captain energy every session.",
   "Calm, sharp, and built for big scores.",
   "Heavy grind. Heavy glow-up.",
-  "GED-BFF says: you are built different."
+  "GED-BFF says: you are built different.",
+  "No cap, you are built different.",
+  "Bro ate that question and left no crumbs.",
+  "Main character study arc unlocked.",
+  "Your focus is giving valedictorian vibes.",
+  "You are cooking these problems rn.",
+  "Certified brain gains. Keep stacking wins.",
+  "Straight buckets. Math can't guard you."
 ];
 
 const HOME_FAQS = [
@@ -74,13 +94,18 @@ const ACRONYM_BY_CATEGORY = {
 };
 
 let footerRotationHandle = null;
+let confettiHandle = null;
+const calcState = { display: "0", left: null, op: null, pendingClear: false };
 
 // ---------------- State ----------------
 const state = {
   questions: [],        // full loaded bank
+  formulas: [],
+  profile: null,
   mode: null,           // "practice" | "test"
   quiz: [],             // current quiz questions
   answers: [],          // user answers aligned with quiz
+  appliedIndices: new Set(),
   index: 0,
   revealed: false,      // whether feedback has been shown for current question (practice mode)
   timer: {
@@ -107,6 +132,8 @@ document.querySelectorAll("[data-nav]").forEach(btn => {
 document.querySelectorAll("[data-close]").forEach(btn => {
   btn.addEventListener("click", closeModal);
 });
+document.querySelector("[data-tool='calc']")?.addEventListener("click", openCalc);
+document.querySelector("[data-tool='formulas']")?.addEventListener("click", openFormulas);
 
 function navigate(view) {
   clearTimer();
@@ -125,20 +152,41 @@ async function loadQuestions() {
   return res.json();
 }
 
+async function loadFormulas() {
+  const res = await fetch("./data/formulas.json", { cache: "no-cache" });
+  if (!res.ok) throw new Error("Failed to load formula sheet");
+  return res.json();
+}
+
 // ---------------- Views ----------------
 function renderHome() {
+  const profile = state.profile || createProfile();
   const total = state.questions.length;
   const catCounts = CATEGORIES.map(c => ({
     cat: c,
     n: state.questions.filter(q => q.category === c).length
   }));
+  const level = xpToLevel(profile.xp || 0);
+  const next = xpToNextLevel(profile.xp || 0);
+  const readiness = readinessScore(profile);
+  const sortedMastery = Object.entries(profile.byCategory || {})
+    .sort((a, b) => (b[1]?.mastery || 0) - (a[1]?.mastery || 0));
 
   app.innerHTML = `
     <section class="card hero home-hero">
       <p class="eyebrow">GED Math prep, leveled up</p>
-      <h1>Welcome to GED-BFF 👋</h1>
+      <h1>Welcome back, ${escapeHtml(profile.name || "Friend")} 👋</h1>
       <p class="muted">A lightweight GED Math practice app with game energy, coaching, and visual walk-throughs.</p>
-      <p class="muted">Practice smarter with focused drills, timed sets, and quick review loops.</p>
+      <div class="stat-row">
+        <div class="stat"><div class="num">Lv ${level}</div><div class="lbl">${escapeHtml(levelTitle(level))}</div></div>
+        <div class="stat"><div class="num">${profile.totalAnswered || 0}</div><div class="lbl">Total answered</div></div>
+        <div class="stat"><div class="num">${profile.dailyStreak || 0}</div><div class="lbl">Day streak</div></div>
+        <div class="stat"><div class="num">${readiness}%</div><div class="lbl">Readiness</div></div>
+      </div>
+      <div class="xp-wrap">
+        <div class="xp-head"><strong>XP progress</strong><span>${next.progressXp}/${next.levelSpan} XP · ${next.percent}%</span></div>
+        <div class="xp-bar"><span style="width:${next.percent}%"></span></div>
+      </div>
       <div class="tile-grid">
         <button class="tile" data-go="practice-setup">
           <h3>📘 Start Practice</h3>
@@ -157,9 +205,21 @@ function renderHome() {
           <p>Lo-fi tap game for breaks. No math questions, just chill shots.</p>
         </button>
       </div>
-      <div class="quick-pills" aria-label="Quick actions">
-        <button class="pill-btn" data-go="practice-setup">Warm up (10 Q)</button>
-        <button class="pill-btn" data-go="test-setup">Timed set (15 min)</button>
+    </section>
+
+    <section class="card">
+      <h2>Mastery by category</h2>
+      <div class="mastery-list">
+        ${sortedMastery.map(([cat, data]) => {
+          const pct = data?.mastery || 0;
+          const tier = masteryTier(pct);
+          return `
+            <div class="mastery-row">
+              <div class="name">${escapeHtml(cat)} · ${escapeHtml(tier.label)}</div>
+              <div class="pct">${pct}%</div>
+              <div class="bar"><span style="width:${pct}%;background:${tier.color}"></span></div>
+            </div>`;
+        }).join("")}
       </div>
     </section>
 
@@ -172,6 +232,16 @@ function renderHome() {
           ${catCounts.map(r => `<tr><td>${escapeHtml(r.cat)}</td><td>${r.n}</td></tr>`).join("")}
         </tbody>
       </table>
+    </section>
+
+    <section class="card">
+      <h2>Badges</h2>
+      <div class="badges">
+        ${BADGES.map(b => {
+          const earned = (profile.badges || []).includes(b.id);
+          return `<div class="badge ${earned ? "earned" : "locked"}"><div class="icon">${b.icon}</div><div class="name">${escapeHtml(b.name)}</div><div class="desc">${escapeHtml(b.description)}</div></div>`;
+        }).join("")}
+      </div>
     </section>
 
     <section class="card">
@@ -254,6 +324,7 @@ function startQuiz({ mode, category, count, timeMinutes }) {
   state.mode = mode;
   state.quiz = buildQuiz(state.questions, { category, count });
   state.answers = new Array(state.quiz.length).fill(null);
+  state.appliedIndices = new Set();
   state.index = 0;
   state.revealed = false;
   state.sessionStartedAt = Date.now();
@@ -316,7 +387,6 @@ function renderQuestion() {
   app.querySelector("#ask-auntie")?.addEventListener("click", () => shareQuestion(q, true));
   app.querySelector("#break-mini-game")?.addEventListener("click", openMiniGameModal);
 
-  // Practice mode: if already revealed (user navigated back), redisplay feedback.
   if (state.mode === "practice" && state.revealed) {
     showFeedback(q, state.answers[state.index]);
   }
@@ -334,7 +404,6 @@ function renderAnswerControls(q) {
       </div>
     `;
   }
-  // multiple-choice
   const selected = state.answers[state.index];
   return `
     <div class="choices" role="radiogroup">
@@ -403,7 +472,6 @@ function wireAnswerControls() {
       btn.addEventListener("click", () => {
         if (state.revealed) return;
         state.answers[state.index] = Number(btn.dataset.choice);
-        // Update visual selection without a full re-render.
         app.querySelectorAll(".choice").forEach(el => el.classList.remove("selected"));
         btn.classList.add("selected");
         updateNavDisabled();
@@ -431,7 +499,7 @@ function wireNavButtons() {
   app.querySelector("#prev")?.addEventListener("click", () => {
     if (state.index === 0) return;
     state.index -= 1;
-    state.revealed = false; // practice-mode: don't carry reveal across navigation
+    state.revealed = false;
     renderQuestion();
   });
   app.querySelector("#primary")?.addEventListener("click", onPrimaryAction);
@@ -446,9 +514,6 @@ function updateNavDisabled() {
   if (!primary) return;
   const ans = state.answers[state.index];
   const answered = ans !== null && ans !== undefined && ans !== "";
-  // In practice mode before reveal, require an answer to check.
-  // In practice mode after reveal, allow Next/Finish always.
-  // In test mode, allow navigating Next even without answer (skipping).
   if (state.mode === "practice" && !state.revealed) {
     primary.disabled = !answered;
   } else {
@@ -465,12 +530,10 @@ function onPrimaryAction() {
     if (!state.revealed) {
       if (ans === null || ans === undefined || ans === "") return;
       state.revealed = true;
-      // Re-render so inputs become disabled & buttons relabel, then show feedback.
       renderQuestion();
       showFeedback(q, ans);
       return;
     }
-    // Already revealed → move on
     if (last) return renderResults();
     state.index += 1;
     state.revealed = false;
@@ -478,18 +541,44 @@ function onPrimaryAction() {
     return;
   }
 
-  // Test mode: advance without feedback; submit on last.
   if (last) return renderResults();
   state.index += 1;
   renderQuestion();
 }
 
+function captureAnsweredQuestion(index) {
+  if (state.appliedIndices.has(index)) return;
+  const q = state.quiz[index];
+  const ans = state.answers[index];
+  if (!q || ans === null || ans === undefined || ans === "") return;
+
+  const correct = isCorrect(q, ans);
+  const prevLevel = xpToLevel(state.profile?.xp || 0);
+  const { profile: profAfterAnswer, xpGained } = applyAnswer(state.profile, q, correct);
+  const { profile: nextProfile, newlyEarned } = evaluateBadges(profAfterAnswer, { hourOfDay: new Date().getHours() });
+  state.profile = nextProfile;
+  saveProfile(state.profile);
+  state.appliedIndices.add(index);
+
+  showToast({ title: correct ? "✅ Correct" : "🧠 Keep going", body: `+${xpGained} XP`, gold: correct });
+
+  const nextLevel = xpToLevel(state.profile.xp || 0);
+  if (nextLevel > prevLevel) {
+    showToast({ title: "⬆️ Level up!", body: `Level ${nextLevel}: ${levelTitle(nextLevel)}`, gold: true });
+    launchConfetti();
+  }
+  newlyEarned.forEach(badge => {
+    showToast({ title: `${badge.icon} Badge unlocked`, body: badge.name, gold: true });
+  });
+}
+
 function showFeedback(q, userAns) {
+  captureAnsweredQuestion(state.index);
+
   const correct = isCorrect(q, userAns);
   const slot = app.querySelector("#feedback-slot");
   if (!slot) return;
 
-  // Highlight choices in multiple choice.
   if (q.inputType === "multiple-choice") {
     app.querySelectorAll("[data-choice]").forEach(btn => {
       const i = Number(btn.dataset.choice);
@@ -524,8 +613,30 @@ function showFeedback(q, userAns) {
 // ---------------- Results ----------------
 function renderResults() {
   clearTimer();
+  if (state.mode === "test") {
+    for (let i = 0; i < state.quiz.length; i += 1) captureAnsweredQuestion(i);
+  }
+
   const result = scoreQuiz(state.quiz, state.answers);
   const recommendation = buildScoreRecommendation(result);
+
+  state.profile = finalizeSession(state.profile, {
+    mode: state.mode,
+    total: result.total,
+    correct: result.correct,
+    percent: result.percent
+  });
+  const { profile: nextProfile, newlyEarned } = evaluateBadges(state.profile, {
+    lastSession: { total: result.total, correct: result.correct, percent: result.percent }
+  });
+  state.profile = nextProfile;
+  saveProfile(state.profile);
+  newlyEarned.forEach(badge => showToast({ title: `${badge.icon} Badge unlocked`, body: badge.name, gold: true }));
+
+  if (result.percent === 100) launchConfetti();
+  if (result.percent >= 85) {
+    showToast({ title: "🔥 Session complete", body: `Strong finish: ${result.percent}%`, gold: true });
+  }
 
   const catRows = Object.entries(result.byCategory)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -626,7 +737,7 @@ function buildWalkthroughSteps({ question, userAnswer, correctText }) {
   const userText = formatUserAnswer(question, userAnswer);
   const setupLine = question.inputType === "numeric"
     ? "Write the equation from the words, then plug in the known numbers."
-    : "Eliminate weak choices first, then verify the last best choice."
+    : "Eliminate weak choices first, then verify the last best choice.";
   const acronymLetters = hint.label.split("").map((letter, idx) => `${letter}: ${hint.meaning.split(",")[idx]?.trim() || "Apply the step"}`);
   const equationLine = question.inputType === "numeric"
     ? "Equation path: given values → substitute numbers → isolate unknown → solve."
@@ -742,6 +853,108 @@ function openMiniGameModal() {
   startMiniGame();
 }
 
+function openCalc() {
+  openModal(`
+    <h2>Calculator</h2>
+    <div class="calc-display" id="calc-display">${escapeHtml(calcState.display)}</div>
+    <div class="calc-keys" id="calc-keys">
+      <button class="clr" data-k="C">C</button>
+      <button data-k="±">±</button>
+      <button data-k="%">%</button>
+      <button class="op" data-k="/">÷</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="*">×</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="-">−</button>
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="+">+</button>
+      <button data-k="0">0</button>
+      <button data-k=".">.</button>
+      <button class="eq" data-k="=">=</button>
+    </div>
+  `);
+  document.getElementById("calc-keys")?.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-k]");
+    const key = btn?.dataset?.k;
+    if (!key) return;
+    handleCalcKey(key);
+  });
+}
+
+function calcApply(left, op, right) {
+  if (op === "+") return left + right;
+  if (op === "-") return left - right;
+  if (op === "*") return left * right;
+  if (op === "/") return right === 0 ? NaN : left / right;
+  return right;
+}
+
+function handleCalcKey(key) {
+  const cur = calcState.display;
+  if (/^[0-9]$/.test(key)) {
+    calcState.display = calcState.pendingClear || cur === "0" ? key : `${cur}${key}`;
+    calcState.pendingClear = false;
+  } else if (key === ".") {
+    if (calcState.pendingClear) {
+      calcState.display = "0.";
+      calcState.pendingClear = false;
+    } else if (!cur.includes(".")) {
+      calcState.display = `${cur}.`;
+    }
+  } else if (key === "C") {
+    calcState.display = "0";
+    calcState.left = null;
+    calcState.op = null;
+    calcState.pendingClear = false;
+  } else if (key === "±") {
+    calcState.display = String(Number(cur) * -1);
+  } else if (key === "%") {
+    calcState.display = String(Number(cur) / 100);
+  } else if (["+", "-", "*", "/"].includes(key)) {
+    if (calcState.left !== null && calcState.op && !calcState.pendingClear) {
+      calcState.left = calcApply(calcState.left, calcState.op, Number(cur));
+      calcState.display = Number.isFinite(calcState.left) ? String(calcState.left) : "Error";
+    } else {
+      calcState.left = Number(cur);
+    }
+    calcState.op = key;
+    calcState.pendingClear = true;
+  } else if (key === "=") {
+    if (calcState.left !== null && calcState.op) {
+      const out = calcApply(calcState.left, calcState.op, Number(cur));
+      calcState.display = Number.isFinite(out) ? String(out) : "Error";
+      calcState.left = null;
+      calcState.op = null;
+      calcState.pendingClear = true;
+    }
+  }
+
+  const el = document.getElementById("calc-display");
+  if (el) el.textContent = calcState.display;
+}
+
+function openFormulas() {
+  const groups = {
+    "Geometry": state.formulas.filter(g => /area|perimeter|surface|volume/i.test(g.group)),
+    "Algebra": state.formulas.filter(g => /algebra/i.test(g.group)),
+    "Data & Stats": state.formulas.filter(g => /data|stat/i.test(g.group))
+  };
+
+  const sectionHtml = Object.entries(groups).map(([title, entries]) => `
+    <section class="formula-group">
+      <h3>${escapeHtml(title)}</h3>
+      ${entries.map(group => `
+        <h4>${escapeHtml(group.group)}</h4>
+        <ul class="formula-list">
+          ${group.items.map(item => `
+            <li><span class="name">${escapeHtml(item.name)}</span><span class="formula">${escapeHtml(item.formula)}</span></li>
+          `).join("")}
+        </ul>
+      `).join("")}
+    </section>
+  `).join("");
+
+  const body = sectionHtml || `<p class="muted">Formula sheet unavailable right now. Please try again after reloading.</p>`;
+  openModal(`<h2>Formula sheet 📐</h2><p class="muted">Quick GED math references.</p>${body}`);
+}
+
 let miniGame = null;
 function startMiniGame() {
   let pos = 6;
@@ -818,13 +1031,82 @@ function initFooterTaglines() {
   footerRotationHandle = setInterval(swap, 4200);
 }
 
+function showToast({ title, body = "", gold = false }) {
+  const stack = document.getElementById("toast-stack");
+  if (!stack) return;
+  const toast = document.createElement("div");
+  toast.className = `toast${gold ? " gold" : ""}`;
+  toast.innerHTML = `<div class="title">${escapeHtml(title)}</div>${body ? `<div class="body">${escapeHtml(body)}</div>` : ""}`;
+  stack.appendChild(toast);
+  window.setTimeout(() => toast.remove(), 3900);
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById("confetti");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const pieces = Array.from({ length: 140 }, () => ({
+    x: Math.random() * w,
+    y: -20 - Math.random() * h * 0.3,
+    vx: -2 + Math.random() * 4,
+    vy: 2 + Math.random() * 4,
+    size: 4 + Math.random() * 7,
+    rot: Math.random() * Math.PI,
+    vr: -0.25 + Math.random() * 0.5,
+    color: ["#4a90e2", "#f4b324", "#19a97f", "#ff77a9", "#7b61ff"][Math.floor(Math.random() * 5)]
+  }));
+
+  if (confettiHandle) cancelAnimationFrame(confettiHandle);
+  const started = performance.now();
+
+  const draw = now => {
+    const elapsed = now - started;
+    ctx.clearRect(0, 0, w, h);
+    for (const p of pieces) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      p.vy += 0.03;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      ctx.restore();
+    }
+    if (elapsed < 1700) {
+      confettiHandle = requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, w, h);
+      confettiHandle = null;
+    }
+  };
+  confettiHandle = requestAnimationFrame(draw);
+}
+
 // ---------------- Timer ----------------
 function startTimer() {
   clearTimer();
   state.timer.handle = setInterval(() => {
     state.timer.remaining -= 1;
     const el = document.getElementById("timer");
-    if (el) el.textContent = formatTime(state.timer.remaining);
+    if (el) {
+      el.textContent = formatTime(state.timer.remaining);
+      if (state.timer.total > 0 && state.timer.remaining / state.timer.total <= 0.1) {
+        el.classList.add("warn");
+      }
+    }
     if (state.timer.remaining <= 0) {
       clearTimer();
       alert("Time's up! Submitting your answers.");
@@ -858,7 +1140,11 @@ function escapeAttr(s) { return escapeHtml(s); }
 (async function init() {
   app.innerHTML = `<section class="card"><p class="muted">Loading question bank…</p></section>`;
   try {
-    state.questions = await loadQuestions();
+    const [questions, formulas] = await Promise.all([loadQuestions(), loadFormulas()]);
+    state.questions = questions;
+    state.formulas = formulas;
+    state.profile = loadProfile() || createProfile();
+    saveProfile(state.profile);
     initFooterTaglines();
     renderHome();
   } catch (err) {
